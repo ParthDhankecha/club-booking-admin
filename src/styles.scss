@@ -1,0 +1,201 @@
+// /* You can add global styles to this file, and also import other style files */
+@use './app/styles' as *;
+
+
+
+// :root {
+//     // Set custom colors
+//     --bs-primary: #ff5733 !important; // Custom Primary Color
+//     --bs-secondary: #6c757d; // Custom Secondary Color
+//     --bs-success: #28a745; // Custom Success Color
+//     --bs-info: #17a2b8; // Custom Info Color
+//     --bs-warning: #ffc107; // Custom Warning Color
+//     --bs-danger: #dc3545; // Custom Danger Color
+//     --bs-light: #f8f9fa; // Custom Light Color
+//     --bs-dark: #343a40; // Custom Dark Color
+//     --bs-link: #0056b3; // Custom Link Color
+// }
+
+:root {
+    --header-height: 60px;
+    --dpd-translate-y: 40px
+}
+
+
+.primary-bg-gradient {
+    background: linear-gradient(270deg, #5386E4 0%, #0B0BCF 100%);
+}
+
+.main-contextual {
+    margin: 0;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 0;
+    padding-bottom: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.sticky-inner-header {
+    position: sticky;
+    top: 0;
+    z-index: 99; // Ensure it stays above other content
+    background-color: #ffffff; // Background color to avoid transparency issues
+    box-shadow: 8px 1px 6px 2px rgba(0, 0, 0, 0.1);
+    // box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); // Optional shadow for better visibility
+    height: var(--header-height);
+}
+
+.d-contents {
+    display: contents !important;
+}
+
+.dpd-translate-y {
+    transform: translateY(var(--dpd-translate-y, 40px)) !important;
+}
+
+.dpd-translate-x-0 {
+    transform: translateX(0) !important;
+}
+
+.w-1-percent {
+    width: 1% !important;
+}
+
+.w-max-content {
+    width: max-content !important;
+}
+
+.text-break-spaces {
+    white-space: break-spaces;
+}
+
+.search-list-height {
+    max-height: 300px;
+    @include app-scrollbar();
+
+    :first-child.div {
+        z-index: 3 !important;
+    }
+
+    .dropdown-item {
+        white-space: normal !important;
+        word-break: break-all !important;
+    }
+}
+
+.cursor-pointer {
+    cursor: pointer !important;
+}
+
+.btn-hover {
+    &:hover {
+        .btn-label {
+            display: block !important;
+        }
+    }
+}
+
+.img-cover {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.custom-ratio-1x1 {
+    aspect-ratio: 1 / 1;
+}
+
+.custom-ratio-16x9 {
+    aspect-ratio: 16 / 9;
+}
+
+.no-overscroll {
+    overscroll-behavior: contain !important;
+}
+
+.reset-number-input {
+    @include app-reset-number-input();
+}
+
+.cursor-grab {
+    cursor: grab;
+    cursor: -webkit-grab;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+
+@media (max-width: 768px) {
+
+    /* Bootstrap "sm" breakpoint */
+    .overflow-x-sm-auto {
+        overflow-x: auto !important;
+    }
+}
+
+
+@media print {
+    @page {
+        /* can also be letter, legal, etc. */
+        margin: 4mm 4mm;
+    }
+
+    table {
+        // margin-left: -6mm !important;
+        width: 100% !important;
+        table-layout: auto !important;
+        word-break: normal !important;
+        page-break-inside: auto;
+
+        th,
+        td {
+            padding: 2px 4px !important;
+            /* reduce padding */
+
+            &:nth-last-child(-n+4) {
+                display: none !important;
+            }
+        }
+    }
+
+    body * {
+        visibility: hidden;
+
+        /* hide everything */
+        app-sidebar,
+        .sticky-inner-header,
+        /* Hide all buttons whose parent is NOT .dropdown */
+        :has(> button):not(.dropdown)>button,
+        #addMoreFeeder {
+            display: none !important;
+        }
+
+        .table-responsive {
+            width: 80% !important;
+            overflow: visible !important;
+        }
+
+        .dev-grid:last-child .top-label {
+            width: 0 !important;
+        }
+    }
+
+    #print-section,
+    #print-section * {
+        visibility: visible;
+    }
+}

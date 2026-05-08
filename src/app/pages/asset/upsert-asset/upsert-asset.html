@@ -1,0 +1,365 @@
+<div class="modal modal-xl d-block">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">
+                        {{isEditMode ? 'Edit' : 'Create'}} Asset
+                    </h1>
+                    <button type="button" class="btn-close" (click)="onCloseOrCancel()"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row mb-0">
+                        <!-- Resort -->
+                        <div class="col-xl-6 mb-3">
+                            <span class="d-inline-block form-label">
+                                Resort <span class="text-danger">*</span>
+                            </span>
+                            <app-common-dropdown [selectedOption]="f_resort?.value" [optionsList]="resortList"
+                                placeholder="Select resort" [filterKeys]="['title']" displayKey1="title"
+                                [usedInModal]="true" (onSelect)="onResortChange($event)" />
+
+                            @if(f_resort?.touched && f_resort?.errors){
+                            <div class="invalid-feedback d-block">
+                                @if(f_resort?.errors?.['required']){
+                                <span>
+                                    Resort is required.
+                                </span>
+                                }
+                            </div>
+                            }
+                        </div>
+                        <!-- Property -->
+                        <div class="col-xl-6 mb-3">
+                            <span class="d-inline-block form-label">
+                                Property <span class="text-danger">*</span>
+                            </span>
+                            <app-common-dropdown [selectedOption]="f_property?.value"
+                                [optionsList]="propertyDropdownList" placeholder="Select property"
+                                [filterKeys]="['title']" displayKey1="title" [usedInModal]="true"
+                                (onSelect)="onPropertyChange($event)" />
+
+                            @if(f_property?.touched && f_property?.errors){
+                            <div class="invalid-feedback d-block">
+                                @if(f_property?.errors?.['required']){
+                                <span>
+                                    Property is required.
+                                </span>
+                                }
+                            </div>
+                            }
+                        </div>
+                        <!-- Title -->
+                        <div class="col-xl-6 mb-3">
+                            <label for="title" class="form-label">
+                                Title <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="title" formControlName="title" class="form-control"
+                                placeholder="Enter title">
+
+                            @if(f_title?.touched && f_title?.errors){
+                            <div class="invalid-feedback d-block">
+                                @if(f_title?.errors?.['required']){
+                                <span>
+                                    Title is required.
+                                </span>
+                                }
+                                @if(f_title?.errors?.['pattern']){
+                                <span>
+                                    Only letters, numbers, spaces, and & / - , . ( ) are allowed (max 150 characters).
+                                </span>
+                                }
+                            </div>
+                            }
+                        </div>
+                        <!-- Price -->
+                        <div class="col-xl-6 mb-3">
+                            <label for="price" class="form-label">
+                                Price
+                            </label>
+                            <input type="number" id="price" formControlName="price" class="form-control number-input"
+                                placeholder="Enter price">
+
+                            @if(f_price?.touched && f_price?.errors){
+                            <div class="invalid-feedback d-block">
+                                @if(f_price?.errors?.['required']){
+                                <span>
+                                    Price is required.
+                                </span>
+                                }
+                                @if(f_price?.errors?.['min']){
+                                <span>
+                                    Price must be greater than 0.
+                                </span>
+                                }
+                            </div>
+                            }
+                        </div>
+                        <!-- Quantity -->
+                        <div class="col-xl-6 mb-3">
+                            <label for="quantity" class="form-label">
+                                Quantity <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" id="quantity" formControlName="quantity"
+                                class="form-control number-input" placeholder="Enter quantity">
+
+                            @if(f_quantity?.touched && f_quantity?.errors){
+                            <div class="invalid-feedback d-block">
+                                @if(f_quantity?.errors?.['required']){
+                                <span>
+                                    Quantity is required.
+                                </span>
+                                }
+                                @if(f_quantity?.errors?.['min']){
+                                <span>
+                                    Quantity must be greater than 0.
+                                </span>
+                                }
+                            </div>
+                            }
+                        </div>
+                        <!-- Description -->
+                        <div class="col-12 mb-3">
+                            <label for="description" class="form-label">
+                                Description <span class="text-danger">*</span>
+                            </label>
+                            <textarea id="description" formControlName="description" rows="5"
+                                class="form-control description-input" placeholder="Enter description"></textarea>
+
+                            @if(f_description?.touched && f_description?.errors){
+                            <div class="invalid-feedback d-block">
+                                @if(f_description?.errors?.['required']){
+                                <span>
+                                    Description is required.
+                                </span>
+                                }
+                                @if(f_description?.errors?.['maxlength']){
+                                <span>
+                                    Description cannot exceed
+                                    {{f_description?.errors?.['maxlength']?.requiredLength}}
+                                    characters.
+                                </span>
+                                }
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Limitations -->
+                    <div class="mt-3 mb-2 d-flex justify-content-center align-items-center">
+                        <hr class="w-100">
+                        <span class="mx-3 fw-bold text-nowrap text-muted fs-6">
+                            Limitations
+                        </span>
+                        <hr class="w-100">
+                    </div>
+                    <!-- Max limit -->
+                    <div class="row" formGroupName="maxLimit">
+                        <div class="col-xl-6 mb-3">
+                            <label for="maxLimit-adults" class="form-label">
+                                Max adults <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" id="maxLimit-adults" formControlName="adults"
+                                class="form-control number-input" placeholder="Enter max allowed adults">
+
+                            @if(f_maxLimit?.get('adults')?.touched && f_maxLimit?.get('adults')?.errors){
+                            <div class="invalid-feedback d-block">
+                                @if(f_maxLimit?.get('adults')?.errors?.['required']){
+                                <span>Max adults is required.</span>
+                                }
+                                @if(f_maxLimit?.get('adults')?.errors?.['min']){
+                                <span>Must be 1 or greater.</span>
+                                }
+                            </div>
+                            }
+                        </div>
+
+                        <div class="col-xl-6 mb-3">
+                            <label for="maxLimit-kids" class="form-label">
+                                Max kids <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" id="maxLimit-kids" formControlName="kids"
+                                class="form-control number-input" placeholder="Enter max allowed kids">
+
+                            @if(f_maxLimit?.get('kids')?.touched && f_maxLimit?.get('kids')?.errors){
+                            <div class="invalid-feedback d-block">
+                                @if(f_maxLimit?.get('kids')?.errors?.['required']){
+                                <span>Max kids is required.</span>
+                                }
+                                @if(f_maxLimit?.get('kids')?.errors?.['min']){
+                                <span>Must be 0 or greater.</span>
+                                }
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Day Units(Credits - Membership) -->
+                    @if(form.contains('dayUnits') && dayUnitsKeys.length) {
+                    <div class="mt-3 mb-2 d-flex justify-content-center align-items-center">
+                        <hr class="w-100">
+                        <span class="mx-3 fw-bold text-nowrap text-muted fs-6">
+                            Day Units
+                        </span>
+                        <hr class="w-100">
+                    </div>
+                    <!-- Day Units form group -->
+                    <div class="row" formGroupName="dayUnits">
+                        @for (key of dayUnitsKeys; track key;) {
+                        <div class="col-xl-6 mb-3">
+                            <div>
+                                <label for="dayUnit-{{key}}" class="form-label">
+                                    {{assetConfigs.dayUnits[key]}} <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" id="dayUnit-{{key}}" formControlName="key" [formControlName]="key"
+                                    class="form-control number-input" placeholder="Enter day unit">
+                            </div>
+                            @if(f_dayUnits?.get(key)?.touched && f_dayUnits?.get(key)?.errors){
+                            <div class="invalid-feedback d-block">
+                                @if(f_dayUnits?.get(key)?.errors?.['required']){
+                                <span>
+                                    Day unit is required.
+                                </span>
+                                }
+                                @if(f_dayUnits?.get(key)?.errors?.['min']){
+                                <span>
+                                    Day unit must be greater than 0.
+                                </span>
+                                }
+                            </div>
+                            }
+                        </div>
+                        }
+                    </div>
+                    }
+
+                    <!-- Information (optional) -->
+                    <div class="row" formGroupName="information">
+                        <div class="mt-3 mb-2 d-flex justify-content-center align-items-center">
+                            <hr class="w-100">
+                            <span class="mx-3 fw-bold text-nowrap text-muted fs-6">
+                                Information
+                            </span>
+                            <hr class="w-100">
+                        </div>
+                        <div class="col-xl-6 mb-3" formGroupName="size">
+                            <label for="info-size" class="form-label">Size</label>
+                            <div class="input-group">
+                                <input type="number" id="info-size" name="value" formControlName="value"
+                                    class="form-control number-input" placeholder="Value" min="0">
+                                <input type="text" name="unit" formControlName="unit" class="form-control"
+                                    placeholder="Unit (e.g. sqft)" style="max-width: 10rem;">
+                            </div>
+                        </div>
+                        <div class="col-xl-6 mb-3">
+                            <label for="info-buildings" class="form-label">Buildings</label>
+                            <input type="number" id="info-buildings" name="buildings" formControlName="buildings"
+                                class="form-control number-input" placeholder="Number of buildings" min="0">
+                        </div>
+                        <div class="col-xl-6 mb-3">
+                            <label for="info-basement" class="form-label">Basement</label>
+                            <input type="number" id="info-basement" name="basement" formControlName="basement"
+                                class="form-control number-input" placeholder="Number" min="0">
+                        </div>
+                        <div class="col-xl-6 mb-3">
+                            <label for="info-bedRooms" class="form-label">Bed Rooms</label>
+                            <input type="text" id="info-bedRooms" name="bedRooms" formControlName="bedRooms"
+                                class="form-control" placeholder="e.g. 3 BHK">
+                        </div>
+                        <div class="col-xl-6 mb-3">
+                            <label for="info-bathrooms" class="form-label">Bathrooms</label>
+                            <input type="number" id="info-bathrooms" name="bathrooms" formControlName="bathrooms"
+                                class="form-control number-input" placeholder="Number" min="0">
+                        </div>
+                        <div class="col-xl-6 mb-3" formGroupName="floorHeight">
+                            <label for="info-floorHeight" class="form-label">Floor Height</label>
+                            <div class="input-group">
+                                <input type="number" id="info-floorHeight" name="value" formControlName="value"
+                                    class="form-control number-input" placeholder="Value" min="0">
+                                <input type="text" name="unit" formControlName="unit" class="form-control"
+                                    placeholder="Unit (e.g. ft)" style="max-width: 10rem;">
+                            </div>
+                        </div>
+                        <div class="col-xl-6 mb-3 d-flex align-items-end gap-3">
+                            <div class="form-check">
+                                <input type="checkbox" id="info-balcony" name="balcony" formControlName="balcony"
+                                    class="form-check-input">
+                                <label for="info-balcony" class="form-check-label">Balcony</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" id="info-carParking" name="carParking"
+                                    formControlName="carParking" class="form-check-input">
+                                <label for="info-carParking" class="form-check-label">Car Parking</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="row">
+                        <div class="mt-3 mb-2 d-flex justify-content-center align-items-center">
+                            <hr class="w-100">
+                            <span class="mx-3 fw-bold text-nowrap text-muted fs-6">
+                                Location
+                            </span>
+                            <hr class="w-100">
+                        </div>
+                        <div class="col-xl-6 row align-content-start mb-3" formGroupName="location">
+                            <div class="col-12 mb-3">
+                                <label for="location-address" class="form-label">
+                                    Address
+                                </label>
+                                <input type="text" id="location-address" formControlName="address" class="form-control"
+                                    placeholder="Enter address">
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="location-mapLink" class="form-label">
+                                    Map embed URL
+                                </label>
+                                <input type="text" id="location-mapLink" formControlName="mapLink" class="form-control"
+                                    placeholder="Paste map URL or embed iframe code" (blur)="onMapLinkBlur()">
+                            </div>
+                        </div>
+                        <div class="col-xl-6">
+                            <div class="col-12 mb-3">
+                                <label class="form-label text-muted small">
+                                    Map Preview
+                                </label>
+                                @if (mapUrlPreview) {
+                                <div class="border rounded overflow-hidden bg-light">
+                                    <iframe [src]="mapUrlPreview" title="Map preview" class="map-preview-iframe"
+                                        loading="lazy" allowfullscreen
+                                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                                </div>
+                                <a [href]="mapUrlForOpen" target="_blank" rel="noopener noreferrer"
+                                    class="small text-primary mt-1 d-inline-block">
+                                    Open in new tab
+                                </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary me-3" (click)="onCloseOrCancel()">
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                        [class.disabled]="isReqAlive" [disabled]="isReqAlive">
+                        @if(!isReqAlive) {
+                        <span>
+                            {{isEditMode ? 'Save Changes' : 'Create New'}}
+                        </span>
+                        } @else {
+                        <span class="spinner-border spinner-border-sm"></span>
+                        <span role="status">
+                            &nbsp; Please wait...
+                        </span>
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

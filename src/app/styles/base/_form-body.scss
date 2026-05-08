@@ -1,0 +1,148 @@
+@use './../mixins' as *;
+
+
+.form-body {
+    padding: 20px;
+    display: flex;
+    flex-flow: column nowrap;
+    gap: 16px;
+
+    /* for common use case */
+    .form-flex-row {
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: center;
+    }
+
+    .input-group {
+        display: flex;
+        flex-flow: column nowrap;
+        gap: 4px;
+
+        .form-flex-row-gap {
+            gap: 2px;
+        }
+
+        @mixin input-label-font-style {
+            font-feature-settings: 'ss11' on, 'cv09' on, 'liga' off, 'calt' off;
+            font-size: 14px;
+            font-style: normal;
+            line-height: 20px;
+            letter-spacing: -0.084px;
+        }
+
+        .input-label {
+            flex-shrink: 0;
+            color: #0E121B;
+            @include input-label-font-style;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .req-indicator {
+            flex-shrink: 0;
+            color: #FB3748;
+            @include input-label-font-style;
+            font-weight: 500;
+        }
+
+        .optional,
+        .limitation {
+            flex-shrink: 0;
+            color: #525866;
+            @include input-label-font-style;
+            font-weight: 400;
+        }
+
+        .info-icon-wrap {
+            flex-shrink: 0;
+
+            .info-icon {
+                display: block;
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        .input-wrap {
+            width: 100%;
+            margin: 0 !important;
+
+            .input-field {
+                width: 100%;
+                margin: 0;
+                padding: 9px 12px;
+                outline: none;
+                color: #0E121B;
+                @include input-label-font-style;
+                font-weight: 400;
+                border-radius: 6px;
+                border: 1px solid #E1E4EA;
+                background: #FFF;
+                box-shadow: 0px 1px 2px 0px rgba(10, 13, 20, 0.03);
+
+                @include app-placeholder {
+                    color: #99A0AE;
+                }
+            }
+        }
+
+        .input-textarea-group {
+            margin: 0;
+            padding: 9px 10px;
+            border-radius: 10px;
+            border: 1px solid #E1E4EA;
+            background: #FFF;
+            box-shadow: 0px 1px 2px 0px rgba(10, 13, 20, 0.03);
+
+            .input-textarea {
+                margin: 0 0 8px;
+                padding: 0;
+                position: relative;
+                field-sizing: content;
+                width: 100%;
+                min-height: 1.5lh;
+                max-height: 6lh;
+                color: #0E121B;
+                @include input-label-font-style;
+                font-weight: 400;
+                border: none;
+                outline: none;
+                resize: none;
+                background: transparent;
+                @include scrollbar-none();
+
+                @include app-placeholder {
+                    color: #99A0AE;
+                }
+            }
+
+            .textarea-limitation {
+                display: block;
+                color: #99A0AE;
+                text-align: right;
+                font-feature-settings: 'ss11' on, 'cv09' on, 'liga' off, 'calt' off;
+                font-size: 11px;
+                font-style: normal;
+                font-weight: 500;
+                line-height: 12px;
+                letter-spacing: 0.22px;
+            }
+        }
+
+        .error-wrap {
+            padding: 2px 0 0;
+            display: flex;
+            flex-flow: column nowrap;
+            gap: 3px;
+
+            .error-msg {
+                color: #FB3748;
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 16px;
+            }
+        }
+    }
+}

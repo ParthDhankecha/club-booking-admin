@@ -1,0 +1,113 @@
+<div class="modal d-block">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">
+                        {{isEditMode ? 'Edit' : 'Create'}} Property
+                    </h1>
+                    <button type="button" class="btn-close" (click)="onCloseOrCancel()"></button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Resort -->
+                    <div class="mb-3">
+                        <span class="d-inline-block form-label">
+                            Resort <span class="text-danger">*</span>
+                        </span>
+                        <app-common-dropdown [selectedOption]="f_resort?.value" [optionsList]="resortOptions"
+                            placeholder="Select resort" [filterKeys]="['title']" displayKey1="title"
+                            [usedInModal]="true" (onSelect)="onResortSelected($event)" />
+
+                        @if(f_resort?.touched && f_resort?.errors){
+                        <div class="invalid-feedback d-block">
+                            @if(f_resort?.errors?.['required']){
+                            <span>
+                                Resort is required.
+                            </span>
+                            }
+                        </div>
+                        }
+                    </div>
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label for="title" class="form-label">
+                            Title <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="title" formControlName="title" class="form-control"
+                            placeholder="Enter title">
+
+                        @if(f_title?.touched && f_title?.errors){
+                        <div class="invalid-feedback d-block">
+                            @if(f_title?.errors?.['required']){
+                            <span>
+                                Title is required.
+                            </span>
+                            }
+                            @if(f_title?.errors?.['pattern']){
+                            <span>
+                                Only letters, numbers, spaces, and & / - , . ( ) are allowed (max 150 characters).
+                            </span>
+                            }
+                        </div>
+                        }
+                    </div>
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            Description <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="description" formControlName="description" class="form-control"
+                            placeholder="Enter description">
+
+                        @if(f_description?.touched && f_description?.errors){
+                        <div class="invalid-feedback d-block">
+                            @if(f_description?.errors?.['required']){
+                            <span>
+                                Description is required.
+                            </span>
+                            }
+                            @if(f_description?.errors?.['maxlength']){
+                            <span>
+                                Description cannot exceed
+                                {{f_description?.errors?.['maxlength']?.requiredLength}}
+                                characters.
+                            </span>
+                            }
+                        </div>
+                        }
+                    </div>
+                    <!-- Is Published -->
+                    <div class="mb-3 d-flex">
+                        <div class="form-check form-switch my-auto ps-5">
+                            <input class="form-check-input fs-5" type="checkbox" id="isPublished"
+                                formControlName="isPublished" [checked]="f_isPublished?.value">
+                            <label class="form-check-label" for="isPublished">
+                                Is Published
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary me-3" (click)="onCloseOrCancel()">
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                        [class.disabled]="isReqAlive" [disabled]="isReqAlive">
+                        @if(!isReqAlive) {
+                        <span>
+                            {{isEditMode ? 'Save Changes' : 'Create New'}}
+                        </span>
+                        } @else {
+                        <span class="spinner-border spinner-border-sm"></span>
+                        <span role="status">
+                            &nbsp; Please wait...
+                        </span>
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

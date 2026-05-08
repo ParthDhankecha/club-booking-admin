@@ -1,0 +1,493 @@
+<div class="calendar-page">
+  <div class="calendar-page-header">
+    <h4 class="m-0">
+      Booking Calendar
+    </h4>
+
+    <div class="d-flex flex-wrap gap-3 align-items-center">
+      <app-common-dropdown [selectedOption]="selectedAsset" [optionsList]="assetList" placeholder="Select asset"
+        [filterKeys]="['title', 'propertyTitle']" displayKey1="title" displayKey2="propertyTitle"
+        [enableSameSelectRemove]="true" (onSelect)="onAssetSelected($event)">
+      </app-common-dropdown>
+
+      @if (selectedAsset && hasAssetImages) {
+      <div class="calendar-asset-thumbs">
+        @for (img of assetImagesPreview; track img.url; let i = $index) {
+        <button type="button" class="calendar-asset-thumb" (click)="openAssetImages(i)">
+          <img [appSrc]="img.url" [alt]="img.alt || ''" defaultSrc="images/placeholder.svg" />
+        </button>
+        }
+      </div>
+      } @else if (selectedAsset && selectedAssetImages.length === 0) {
+      <span class="calendar-asset-no-images text-muted small">
+        No images
+      </span>
+      }
+    </div>
+  </div>
+
+  @if (!selectedAsset) {
+  <div class="calendar-placeholder">
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="opacity-25 mb-3"
+      viewBox="0 0 16 16">
+      <path
+        d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+    </svg>
+    <p class="mb-0 fs-6">
+      Select an asset to view its booking calendar
+    </p>
+  </div>
+  } @else if (loading) {
+  <div class="calendar-loading">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-2 mb-0 text-muted small">
+      Loading calendar…
+    </p>
+  </div>
+  } @else if (calendarData && daySlots.length) {
+  <div class="calendar-card" [class.calendar-grid-month]="viewType === 'monthly'">
+    <div class="calendar-range-header">
+      <div class="calendar-nav">
+        <button type="button" class="calendar-nav-btn" (click)="prevPeriod()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd"
+              d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z" />
+          </svg>
+        </button>
+        <button type="button" class="calendar-nav-btn calendar-nav-btn-today" (click)="goToToday()">
+          Today
+        </button>
+        <button type="button" class="calendar-nav-btn" (click)="nextPeriod()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd"
+              d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+          </svg>
+        </button>
+      </div>
+      <span class="calendar-range-header-label">
+        @if (viewType === 'weekly') {
+        {{ weekStart | date:'d MMM' }} – {{ weekEnd | date:'d MMM yyyy' }}
+        } @else {
+        {{ monthYearLabel }}
+        }
+      </span>
+      <div class="calendar-view-toggle">
+        <button type="button" class="calendar-view-tab" (click)="setViewType('weekly')"
+          [class.calendar-view-tab-active]="viewType === 'weekly'">
+          Week
+        </button>
+        <button type="button" class="calendar-view-tab" (click)="setViewType('monthly')"
+          [class.calendar-view-tab-active]="viewType === 'monthly'">
+          Month
+        </button>
+      </div>
+    </div>
+
+    <div class="calendar-grid">
+      <div class="calendar-row calendar-row-head">
+        <div class="calendar-cell calendar-cell-head">Mon</div>
+        <div class="calendar-cell calendar-cell-head">Tue</div>
+        <div class="calendar-cell calendar-cell-head">Wed</div>
+        <div class="calendar-cell calendar-cell-head">Thu</div>
+        <div class="calendar-cell calendar-cell-head">Fri</div>
+        <div class="calendar-cell calendar-cell-head">Sat</div>
+        <div class="calendar-cell calendar-cell-head">Sun</div>
+      </div>
+
+      <div class="calendar-row calendar-row-body">
+        @for (slot of daySlots; track slot.date; let idx = $index;) {
+        <div class="calendar-cell calendar-cell-body" [class.calendar-cell-today]="slot.isToday"
+          [class.calendar-cell-stay-full]="isStayFull(slot)" [class.calendar-cell-other-month]="slot.isOtherMonth">
+          <div class="calendar-cell-inner">
+            <div class="calendar-cell-header">
+              <span class="calendar-bar-label calendar-bar-label-header"
+                [class.calendar-bar-label-header-full]="slot.totalQuantity > 0 && usedUnits(slot) >= slot.totalQuantity">
+                {{usedUnits(slot)}}/{{slot.totalQuantity}}
+              </span>
+              <span class="calendar-day-num" [class.text-primary]="slot.isToday"
+                [class.calendar-day-other-month]="slot.isOtherMonth">
+                @if (slot.otherMonthLabel) {
+                <span class="calendar-other-month-label">
+                  {{ slot.otherMonthLabel }}
+                </span>
+                }
+                {{ slot.dayOfMonth }}
+              </span>
+            </div>
+            <div class="calendar-stay-bars" role="list">
+              @for (bar of slot.stayBars; track $index) {
+              <div class="calendar-stay-bar calendar-stay-bar-{{ bar.type }}"
+                [class.calendar-stay-bar-start]="bar.isStart" [class.calendar-stay-bar-end]="bar.isEnd" role="listitem"
+                (click)="$event.stopPropagation(); openDetailsByBar(slot, bar)">
+                <span class="calendar-stay-bar-label">
+                  {{bar.label}}
+                </span>
+              </div>
+              }
+            </div>
+            <div class="calendar-cell-footer">
+              @if (slot.isOtherMonth) {
+              <span class="calendar-avail-muted">—</span>
+              } @else {
+              <span class="calendar-avail-badge" [class.calendar-avail-badge-zero]="availableUnits(slot) === 0">
+                @if (availableUnits(slot) > 0) {
+                {{availableUnits(slot)}} free
+                } @else {
+                Full
+                }
+              </span>
+              <div class="action-wrap">
+                <button type="button" class="calendar-cell-view-btn"
+                  (click)="$event.stopPropagation(); openDetailsByDate(slot)">
+                  View
+                </button>
+              </div>
+              }
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend for the calendar -->
+  <div class="calendar-legend">
+    <span class="legend-item"><span class="legend-dot legend-dot-booked"></span> Booked</span>
+    <span class="legend-item"><span class="legend-dot legend-dot-pending"></span> Processing</span>
+    <span class="legend-item"><span class="legend-dot legend-dot-basket"></span> In queue</span>
+  </div>
+  } @else if (selectedAsset && !loading) {
+  <div class="calendar-placeholder calendar-placeholder-empty">
+    <p class="mb-0">
+      No data for this {{ viewType === 'weekly' ? 'week' : 'month' }}.
+    </p>
+  </div>
+  }
+
+
+
+  <!-- Asset images gallery modal -->
+  <app-modal-layer [appRegisterModalLayer]="assetImagesModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(assetImagesModalId) && hasAssetImages) {
+    <div class="modal d-block calendar-asset-images-modal-wrap">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content calendar-asset-images-modal">
+          <div class="calendar-asset-images-modal-header">
+            <h2 class="calendar-asset-images-modal-title">
+              {{ selectedAsset?.title }} – Images
+            </h2>
+            <button type="button" class="calendar-details-modal-close" (click)="closeAssetImages()" aria-label="Close">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path
+                  d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z" />
+              </svg>
+            </button>
+          </div>
+          <div class="calendar-asset-images-modal-body">
+            <div class="calendar-asset-images-gallery">
+              @if (selectedAssetImages.length > 1) {
+              <button type="button" class="calendar-asset-images-nav calendar-asset-images-prev"
+                (click)="prevAssetImage()" aria-label="Previous image">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                  <path
+                    d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z" />
+                </svg>
+              </button>
+              }
+              <div class="calendar-asset-images-main">
+                <img [appSrc]="selectedAssetImages[assetImageIndex].url"
+                  [alt]="selectedAssetImages[assetImageIndex].alt || ''" defaultSrc="images/placeholder.svg"
+                  class="calendar-asset-images-img" />
+                @if (selectedAssetImages[assetImageIndex].alt) {
+                <p class="calendar-asset-images-caption">{{ selectedAssetImages[assetImageIndex].alt }}</p>
+                }
+              </div>
+              @if (selectedAssetImages.length > 1) {
+              <button type="button" class="calendar-asset-images-nav calendar-asset-images-next"
+                (click)="nextAssetImage()" aria-label="Next image">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                  <path
+                    d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                </svg>
+              </button>
+              }
+            </div>
+            @if (selectedAssetImages.length > 1) {
+            <div class="calendar-asset-images-dots">
+              @for (img of selectedAssetImages; track img.url; let i = $index) {
+              <button type="button" class="calendar-asset-images-dot"
+                [class.calendar-asset-images-dot-active]="i === assetImageIndex" (click)="assetImageIndex = i"
+                [attr.aria-label]="'Image ' + (i + 1)"></button>
+              }
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  </app-modal-layer>
+
+  <!-- Calendar details popup modal -->
+  <app-modal-layer [appRegisterModalLayer]="calendarDetailsModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(calendarDetailsModalId)) {
+    <div class="modal d-block calendar-details-modal-wrap">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content calendar-details-modal">
+          <div class="calendar-details-modal-header">
+            <h2 class="calendar-details-modal-title">
+              @if (detailsKind === 'date') {
+              <span class="calendar-details-modal-title-icon" aria-hidden="true">📅</span>
+              Booking details{{ detailsData?.date ? (' – ' + (detailsData.date | date:'fullDate')) : '' }}
+              } @else {
+              <span class="calendar-details-modal-title-icon" aria-hidden="true">📋</span>
+              {{ detailsData?.orderNo != null ? ('Order #' + detailsData.orderNo) : 'Order details' }}
+              }
+            </h2>
+            <button type="button" class="calendar-details-modal-close" (click)="closeDetails()" aria-label="Close">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path
+                  d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z" />
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body calendar-details-modal-body">
+            @if (detailsLoading) {
+            <div class="calendar-details-loading">
+              <div class="calendar-details-loading-spinner"></div>
+              <p class="calendar-details-loading-text">Loading details…</p>
+            </div>
+            } @else if (detailsKind === 'date' && detailsData) {
+            <div class="calendar-details-date">
+              @if ((detailsData.bookings?.length ?? 0) > 0) {
+              <section class="calendar-details-section">
+                <h3 class="calendar-details-section-title">
+                  <span class="calendar-details-section-dot calendar-details-section-dot-booked"></span>
+                  Bookings
+                </h3>
+                <div class="calendar-details-cards">
+                  @for (order of detailsData.bookings; track order.orderId) {
+                  <article class="calendar-details-card calendar-details-card-booking">
+                    <div class="calendar-details-card-head">
+                      <span class="calendar-details-card-order">
+                        Order #{{ order.orderNo }}
+                      </span>
+                      <span class="calendar-details-badge"
+                        [class.calendar-details-badge-success]="order.status === 'success'"
+                        [class.calendar-details-badge-pending]="order.status === 'pending'">
+                        {{order.status}}
+                      </span>
+                    </div>
+                    <div class="calendar-details-card-meta">
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">Order date</span>
+                        <span>{{ order.orderDate | date:'mediumDate' }}</span>
+                      </span>
+                      <span class="calendar-details-meta-item calendar-details-meta-amount">
+                        <span class="calendar-details-meta-label">Amount</span>
+                        <span>{{ order.amountToPay | currency:'INR' }}</span>
+                      </span>
+                    </div>
+                    @for (item of order.lineItems; track $index) {
+                    <div class="calendar-details-guest-block">
+                      <span class="calendar-details-guest-name">
+                        {{ item.guestDetails?.guestName ?? 'Guest' }}
+                      </span>
+                      <span class="calendar-details-guest-dates">
+                        {{item.startDate|date:'shortDate'}} – {{item.endDate|date:'shortDate'}}
+                      </span>
+                      <span class="calendar-details-guest-units">
+                        {{ item.units }} unit(s) · {{item.amountToPay|currency:'INR'}}
+                      </span>
+                      @if (item.guestDetails) {
+                      <div class="calendar-details-guest-full">
+                        @if (item.guestDetails.email) {
+                        <span class="calendar-details-detail-row">
+                          <span class="calendar-details-meta-label">Email</span>
+                          <a [href]="'mailto:' + item.guestDetails.email">
+                            {{item.guestDetails.email}}
+                          </a>
+                        </span>
+                        }
+                        @if (item.guestDetails.phone) {
+                        <span class="calendar-details-detail-row">
+                          <span class="calendar-details-meta-label">Phone</span>
+                          <a [href]="'tel:' + item.guestDetails.phone">
+                            {{item.guestDetails.phone}}
+                          </a>
+                        </span>
+                        }
+                        @if (item.guestDetails.address) {
+                        <span class="calendar-details-detail-row">
+                          <span class="calendar-details-meta-label">Address</span>
+                          {{ item.guestDetails.address }}
+                        </span>
+                        }
+                      </div>
+                      }
+                    </div>
+                    }
+                  </article>
+                  }
+                </div>
+              </section>
+              }
+              @if ((detailsData.basketItems?.length ?? 0) > 0) {
+              <section class="calendar-details-section">
+                <h3 class="calendar-details-section-title">
+                  <span class="calendar-details-section-dot calendar-details-section-dot-queue"></span>
+                  In queue
+                </h3>
+                <div class="calendar-details-cards">
+                  @for (item of detailsData.basketItems; track item.uid) {
+                  <article class="calendar-details-card calendar-details-card-queue">
+                    <span class="calendar-details-guest-name">
+                      {{item.guest?.guestName ?? 'Guest' }}
+                    </span>
+                    <span class="calendar-details-guest-dates">
+                      {{item.startDate|date:'shortDate'}} – {{item.endDate|date:'shortDate'}}
+                    </span>
+                    <span class="calendar-details-guest-units">
+                      {{item.units }} unit(s)
+                    </span>
+                    @if (item.guest) {
+                    <div class="calendar-details-guest-full">
+                      @if (item.guest.email) {
+                      <span class="calendar-details-detail-row">
+                        <span class="calendar-details-meta-label">Email</span>
+                        <a [href]="'mailto:' + item.guest.email">
+                          {{item.guest.email}}
+                        </a>
+                      </span>
+                      }
+                      @if (item.guest.phone) {
+                      <span class="calendar-details-detail-row">
+                        <span class="calendar-details-meta-label">Phone</span>
+                        <a [href]="'tel:' + item.guest.phone">
+                          {{item.guest.phone }}
+                        </a>
+                      </span>
+                      }
+                    </div>
+                    }
+                    @if (item.issuedAt) {
+                    <span class="calendar-details-meta-item">
+                      <span class="calendar-details-meta-label">Added</span>
+                      {{item.issuedAt|date:'medium'}}
+                    </span>
+                    }
+                  </article>
+                  }
+                </div>
+              </section>
+              }
+              @if ((detailsData.bookings?.length ?? 0) === 0 && (detailsData.basketItems?.length ?? 0) === 0) {
+              <div class="calendar-details-empty">
+                <span class="calendar-details-empty-icon" aria-hidden="true">📭</span>
+                <p>No bookings or items in queue for this day.</p>
+              </div>
+              }
+            </div>
+            } @else if (detailsKind === 'order' && detailsData) {
+            <div class="calendar-details-order">
+              <div class="calendar-details-order-summary">
+                <span class="calendar-details-badge"
+                  [class.calendar-details-badge-success]="detailsData.status === 'success'"
+                  [class.calendar-details-badge-pending]="detailsData.status === 'pending'">
+                  {{ detailsData.status}}
+                </span>
+                <span class="calendar-details-order-meta">
+                  Order date: {{detailsData.orderDate|date:'mediumDate'}}
+                </span>
+                <span class="calendar-details-order-amount">
+                  {{detailsData.amountToPay|currency:'INR'}}
+                </span>
+              </div>
+              @if (detailsData.userId) {
+              <div class="calendar-details-customer">
+                <span class="calendar-details-meta-label">Customer</span>
+                <span class="calendar-details-customer-name">
+                  {{detailsData.userId?.fullname}}
+                </span>
+                <div class="calendar-details-guest-full">
+                  @if (detailsData.userId.email) {
+                  <span class="calendar-details-detail-row">
+                    <span class="calendar-details-meta-label">Email</span>
+                    <a [href]="'mailto:' + detailsData.userId.email">
+                      {{detailsData.userId.email}}
+                    </a>
+                  </span>
+                  }
+                  @if (detailsData.userId.mobile) {
+                  <span class="calendar-details-detail-row">
+                    <span class="calendar-details-meta-label">Phone</span>
+                    <a [href]="'tel:' + detailsData.userId.mobile">
+                      {{detailsData.userId.mobile}}
+                    </a>
+                  </span>
+                  }
+                </div>
+              </div>
+              }
+              <section class="calendar-details-section">
+                <h3 class="calendar-details-section-title">
+                  Line items
+                </h3>
+                <div class="calendar-details-cards">
+                  @for (item of detailsData.lineItems; track $index) {
+                  <article class="calendar-details-card calendar-details-card-line">
+                    <div class="calendar-details-card-head">
+                      <span class="text-capitalize">
+                        {{item.assetId?.title ?? 'Asset'}}
+                      </span>
+                      <span class="calendar-details-line-amount">
+                        {{item.amountToPay|currency:'INR'}}
+                      </span>
+                    </div>
+                    <span class="calendar-details-guest-dates">
+                      {{item.startDate|date:'shortDate'}} – {{item.endDate|date:'shortDate'}} · {{item.units}} unit(s)
+                    </span>
+                    @if (item.guestDetails) {
+                    <div class="calendar-details-guest-full">
+                      <span class="calendar-details-guest-name">
+                        {{item.guestDetails.guestName}}
+                      </span>
+                      @if (item.guestDetails.email) {
+                      <span class="calendar-details-detail-row">
+                        <span class="calendar-details-meta-label">Email</span>
+                        <a [href]="'mailto:' + item.guestDetails.email">{{ item.guestDetails.email }}</a>
+                      </span>
+                      }
+                      @if (item.guestDetails.phone) {
+                      <span class="calendar-details-detail-row">
+                        <span class="calendar-details-meta-label">Phone</span>
+                        <a [href]="'tel:' + item.guestDetails.phone">{{ item.guestDetails.phone }}</a>
+                      </span>
+                      }
+                      @if (item.guestDetails.address) {
+                      <span class="calendar-details-detail-row">
+                        <span class="calendar-details-meta-label">Address</span>
+                        {{ item.guestDetails.address }}
+                      </span>
+                      }
+                    </div>
+                    }
+                  </article>
+                  }
+                </div>
+              </section>
+            </div>
+            }
+          </div>
+          <div class="calendar-details-modal-footer">
+            <button type="button" class="calendar-details-btn-close ms-auto" (click)="closeDetails()">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  </app-modal-layer>
+</div>

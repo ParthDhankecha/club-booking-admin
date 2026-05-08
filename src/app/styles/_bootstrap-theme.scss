@@ -1,0 +1,42 @@
+/* 1. Functions */
+@use "bootstrap/scss/functions" as *;
+
+/* 2. Overrides */
+$primary: #6c5ce7;
+$secondary: #00b894;
+$success: #00d084;
+$info: #00c2ff;
+$warning: #fbc531;
+$danger: #e84118;
+$light: #f8f9fa;
+$dark: #2d3436;
+
+$custom-colors: (
+  "brand": #ff7a59,
+  "muted": #8898aa
+);
+
+$theme-colors: map-merge(
+  (
+    "primary": $primary,
+    "secondary": $secondary,
+    "success": $success,
+    "info": $info,
+    "warning": $warning,
+    "danger": $danger,
+    "light": $light,
+    "dark": $dark
+  ),
+  $custom-colors
+);
+
+/* 3. Load Bootstrap fully */
+@use "bootstrap/scss/variables" as *;
+@use "bootstrap/scss/maps" as *;
+@use "bootstrap/scss/mixins" as *;
+@use "bootstrap/scss/bootstrap" as *;
+
+/* 4. Now you can use mixins safely */
+.btn-brand {
+  @include button-variant(map-get($theme-colors, "brand"), #fff);
+}

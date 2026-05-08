@@ -1,0 +1,228 @@
+<div class="d-flex gap-2 justify-content-between">
+    <h4 class="mb-3">
+        Assets
+    </h4>
+</div>
+
+<div class="bg-white rounded-3 shadow p-2 pt-3">
+    <div class="mb-3 d-flex gap-2 justify-content-between flex-wrap">
+        <div class="d-flex gap-2 align-items-center flex-wrap flex-grow-1">
+            <app-common-dropdown [selectedOption]="selectedResort" [optionsList]="resortList" placeholder="All resorts"
+                [filterKeys]="['title']" displayKey1="title" [enableSameSelectRemove]="true"
+                (onSelect)="onResortFilterSelected($event)" />
+
+            <input type="text" name="searchProperty" class="form-control w-auto mw-100" placeholder="Search property"
+                [(ngModel)]="searchProperty" />
+
+            <app-common-dropdown [selectedOption]="selectedProperty" [optionsList]="propertyList"
+                placeholder="Select property" [filterKeys]="['title']" displayKey1="title"
+                [enableSameSelectRemove]="true" (onSelect)="onPropertySelected($event)" />
+
+            <button class="btn btn-sm btn-outline-primary" (click)="onSearch()">
+                Search
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="onClearFilters()">
+                Clear
+            </button>
+        </div>
+        <button class="btn btn-outline-primary" (click)="onCreateNew()">
+            + Add New
+        </button>
+    </div>
+    <!-- Loader -->
+    @if(loading){
+    <div class="text-center">
+        <div class="spinner-border text-primary"></div>
+    </div>
+    }
+
+    <!-- Table -->
+    @if(!loading){
+    <div class="table-responsive-xl">
+        <table class="table table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Property</th>
+                    <th>Status</th>
+                    <th class="text-nowrap">Created At</th>
+                    <th class="text-nowrap">Updated At</th>
+                    <th class="text-center w-1-percent">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (asset of assets; track asset._id; let i = $index;) {
+                <tr>
+                    <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+                    <td class="text-capitalize">
+                        {{ asset.title }}
+                    </td>
+                    <td>
+                        <p class="description-text">
+                            {{ asset.description || '-' }}
+                        </p>
+                    </td>
+                    <td>
+                        {{ asset.price }}
+                    </td>
+                    <td>
+                        {{ asset.quantity }}
+                    </td>
+                    <td class="text-capitalize">
+                        {{ asset?.propertyId?.title }}
+                    </td>
+                    <td>
+                        <span class="badge rounded-pill cursor-pointer"
+                            [class]="asset.isPublished ? 'bg-success' : 'bg-danger'"
+                            (click)="onChangeAssetStatus(asset)">
+                            {{ asset.isPublished ? 'Published' : 'Unpublished' }}
+                        </span>
+                    <td class="text-muted">
+                        {{ asset.createdAt | date:'yyyy-MM-dd' }}
+                    </td>
+                    <td class="text-muted">
+                        {{ asset.updatedAt | date:'yyyy-MM-dd' }}
+                    </td>
+                    <td>
+                        <div class="dropdown d-block text-center">
+                            <button type="button" data-bs-toggle="dropdown" aria-expanded="false" title="More options"
+                                class="btn btn-sm btn-outline-secondary rounded-circle border-0 outline-none shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
+                                    <path
+                                        d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+                                </svg>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <button class="dropdown-item" type="button" (click)="onEditAmenities(asset)">
+                                        Amenities
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item" type="button" (click)="onEditImages(asset)">
+                                        Images
+                                    </button>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <button class="dropdown-item" type="button" (click)="onEditAsset(asset)">
+                                        Edit
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item text-danger" type="button"
+                                        (click)="onDeleteAsset(asset)">
+                                        Delete
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                }@empty{
+                <tr>
+                    <td colspan="10" class="text-center">
+                        No assets found
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <app-pagination [totalPages]="totalPages" [totalEntries]="totalEntries" [currentPage]="currentPage"
+        [pageSize]="pageSize" (pageChange)="onPageChange($event)" />
+    }
+</div>
+
+
+<!-- Upsert Asset Modal -->
+<app-modal-layer [appRegisterModalLayer]="upsertAssetModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(upsertAssetModalId)) {
+    <app-upsert-asset [data]="assetData" [propertyList]="_propertyList" [resortList]="resortList"
+        [selectedResort]="selectedResort" [selectedProperty]="selectedProperty" [assetConfigs]="assetConfigs"
+        (upsert)="onUpsertAsset($event)" />
+    }
+</app-modal-layer>
+
+<!-- Change Asset Status Modal -->
+<app-modal-layer [appRegisterModalLayer]="changeAssetStatusModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(changeAssetStatusModalId)) {
+    <div class="modal d-block">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">
+                        Change Asset Status
+                    </h1>
+                    <button type="button" class="btn-close" (click)="onChangeAssetStatusCancel()"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Are you sure you want to change the status of
+                        <span class="text-danger fw-bold text-capitalize">
+                            {{ assetData?.title }}
+                        </span>
+                        asset to
+                        <span class="text-danger fw-bold text-capitalize">
+                            {{ assetData?.isPublished ? 'Unpublished' : 'Published' }}
+                        </span>?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary me-3" (click)="onChangeAssetStatusCancel()">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" (click)="onConfirmChangeAssetStatus()">
+                        Confirm Change
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</app-modal-layer>
+
+<!-- Delete Asset Modal -->
+<app-modal-layer [appRegisterModalLayer]="deleteAssetModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(deleteAssetModalId)) {
+    <div class="modal d-block">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">
+                        Delete Asset
+                    </h1>
+                    <button type="button" class="btn-close" (click)="onDeleteAssetCancel()"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Are you sure you want to delete
+                        <span class="text-danger fw-bold text-capitalize">
+                            {{ assetData?.title }}
+                        </span>
+                        asset under property
+                        <span class="text-danger fw-bold text-capitalize">
+                            {{ assetData?.propertyId?.title }}
+                        </span>?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary me-3" (click)="onDeleteAssetCancel()">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" (click)="onConfirmDeleteAsset()">
+                        Confirm Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</app-modal-layer>

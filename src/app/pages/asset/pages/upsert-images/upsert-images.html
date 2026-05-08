@@ -1,0 +1,112 @@
+<div class="d-flex gap-2 justify-content-between">
+    <h4 class="mb-3">
+        Images
+    </h4>
+</div>
+
+<div class="bg-white rounded-3 shadow p-3 pt-4">
+    <div class="mb-3 border-bottom pb-2">
+        <!-- show asset details here -->
+        <h2 class="mb-0 fw-semibold fs-6 text-center text-muted">
+            <span class="text-capitalize fw-bold text-gray">
+                {{assetData?.title}}
+            </span>
+            under
+            <span class="text-capitalize fw-bold text-gray">
+                {{assetData?.propertyId?.title}}
+            </span>
+            property
+            <span class="badge rounded-pill text-uppercase"
+                [class]="assetData?.isPublished? 'bg-success' : 'bg-danger'">
+                {{assetData?.isPublished ? 'Published' : 'Unpublished'}}
+            </span>
+        </h2>
+    </div>
+
+    <form [formGroup]="form">
+        <!-- Images -->
+        <div formArrayName="images" class="row" cdkDropList cdkDropListOrientation="mixed"
+            (cdkDropListDropped)="onDrop($event)">
+            @for (image of f_images.controls; track image.value.id; let index = $index;) {
+            <div class="col-md-6 col-xl-4 col-xxl-3 mb-3 overflow-hidden" cdkDrag>
+                <div [formGroupName]="index" class="card shadow-sm h-100 position-relative">
+                    <div class="card-header d-flex gap-2 align-items-center">
+                        <input type="file" class="form-control form-control-sm flex-grow-1" accept="image/*"
+                            (change)="onChangeImage($event, index)">
+                        <button type="button" class="btn btn-outline-danger btn-sm" (click)="onDeleteImage(index)">
+                            Delete
+                        </button>
+                    </div>
+                    <div cdkDragHandle class="card-body p-2">
+                        <img [appSrc]="image.value.url" alt="" class="asset-thumb rounded user-select-none"
+                            draggable="false">
+                    </div>
+                    <div class="card-footer">
+                        <textarea class="form-control img-alt-textarea" [name]="'alt-'+index" formControlName="alt"
+                            [class.is-invalid]="image?.get('alt')?.errors?.['maxlength']" rows="1"
+                            placeholder="Enter image alt text"></textarea>
+                    </div>
+
+                    @if(uploadIndexes[index]) {
+                    <div class="text-center position-absolute top-0 start-0 end-0 bottom-0">
+                        <div
+                            class="d-flex justify-content-center align-items-center h-100 bg-dark bg-opacity-10 rounded fs-5">
+                            <span class="spinner-border spinner-border"></span>
+                            <span role="status">
+                                &nbsp; Saving...
+                            </span>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+
+        <div class="d-flex column-gap-4 mt-3 mb-2 justify-content-center align-items-center flex-wrap">
+            <button type="button" class="btn btn-outline-secondary" (click)="onAddImage()">
+                + Add Image
+            </button>
+            <button type="button" class="btn btn-outline-primary" (click)="onSubmit()">
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+
+<!-- Delete Image Modal -->
+<app-modal-layer [appRegisterModalLayer]="deleteImageModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(deleteImageModalId)) {
+    <div class="modal d-block">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">
+                        Delete Image
+                    </h1>
+                    <button type="button" class="btn-close" (click)="onDeleteImageCancel()"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3 text-center">
+                        Are you sure you want to delete this image?
+                    </p>
+                    <img [appSrc]="imageData.url" alt="" class="asset-thumb rounded user-select-none mb-3"
+                        draggable="false">
+                    <span class="text-capitalize text-muted">
+                        ALT: {{ imageData.alt }}
+                    </span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary me-3" (click)="onDeleteImageCancel()">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" (click)="onConfirmDeleteImage()">
+                        Confirm Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</app-modal-layer>

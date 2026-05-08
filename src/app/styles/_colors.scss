@@ -1,0 +1,102 @@
+@use 'sass:list';
+
+
+// / ===== Brand tokens (from logo) ===== /
+$brand-blue-900: #0B0BCF;     // primary brand
+$brand-blue-400: #5386E4;     // mid blue
+$brand-blue-50:  #ECECFE;     // pale blue / surfaces
+$brand-ink:      #0A0908;     // near-black text
+$brand-accent:   #F8A41D;     // from logo orange (rgb(248,164,29))
+
+
+// / ===== Base & text ===== /
+$base: #FFFFFF;
+$on-base: #141C25;
+$light-base: #FAFAFA;
+$on-light-base: #344051;
+
+
+// / ===== Borders & dividers ===== /
+$border-color: #E4E7EC;                 // neutral border
+$input-border: rgba(216, 216, 255, 1);  // requested
+$divider: rgba(236, 236, 254, 1);       // requested (#ECECFE)
+
+
+// / ===== On-colors / overlays ===== /
+$on-base-light: rgba(10, 9, 8, 0.5);
+$on-base-strong: rgba(10, 9, 8, 0.8);
+$on-base-blue: $brand-blue-900;
+
+
+// / ===== Primary (brand) ===== /
+$primary: $brand-blue-900;
+$on-primary: #FFFFFF;
+$primary-link: $brand-blue-900;
+$primary-fg: $brand-blue-900;
+
+
+// / Gradient for primary UI (header, CTA hovers, chips) /
+$primary-gc1: $brand-blue-400;
+$primary-gc2: $brand-blue-900;
+
+
+// / ===== Light primary tint ===== /
+$light-primary: rgba(236, 236, 254, 0.5); // requested light background
+$on-light-primary: #344051;
+
+
+// / ===== Secondary (accent) ===== /
+$secondary: $brand-accent;  // orange accent from logo
+$on-secondary: #FFFFFF;
+
+
+// / ===== Optional utility colors ===== /
+$lightbase: #F9F9F9;
+$on-lightbase: #000000;
+$on-lightbase-light: #9F9F9F;
+
+
+$blue: #0BA7FF;
+
+
+$ternary: #F0C72F;
+$on-ternary: #FFFFFF;
+
+
+$helper-green: #E2FFD0;   $on-helper-green: #000000;
+$helper-orange: #FFE1D0;  $on-helper-orange: #000000;
+$helper-blue: #C4F2FF;    $on-helper-blue: #000000;
+$helper-sky: #5BC4FF;     $on-helper-sky: #000000;
+$helper-purple: #917EE0;  $helper-purple-light: #E6E4FF;  $on-helper-purple: #000000;
+
+
+$error: #FF0000;
+$on-error: #FFFFFF;
+
+
+// / ===== Grays ===== /
+$gray:      rgba(241, 241, 241, 1); // #f1f1f1
+$gray-100:  rgba(251, 251, 251, 1);
+$gray-150:  rgba(245, 245, 245, 1);
+$gray-200:  rgba(225, 225, 225, 1);
+$gray-300:  rgba(217, 217, 217, 1);
+$gray-700:  rgba(159, 159, 159, 0.8);
+
+
+// / ===== Convenience CSS variables (optional) ===== /
+:root {
+  --color-primary: #{$primary};
+  --color-primary-400: #{$brand-blue-400};
+  --color-primary-50: #{$brand-blue-50};
+  --color-accent: #{$secondary};
+  --color-text: #{$on-base};
+  --color-border: #{$input-border};
+  --color-divider: #{$divider};
+  --surface-weak: #{$light-primary};
+}
+
+
+// / ===== Example gradient helper ===== /
+@mixin brand-gradient {
+  background-image: linear-gradient(90deg, #{$primary-gc1} 0%, #{$primary-gc2} 100%);
+}

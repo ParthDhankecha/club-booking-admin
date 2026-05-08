@@ -1,0 +1,7 @@
+@use 'app/styles' as *;
+
+
+.description-text {
+    max-width: 80ch;
+    @include app-ellipses(2);
+}

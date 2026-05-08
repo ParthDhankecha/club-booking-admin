@@ -1,0 +1,67 @@
+@use './../../../styles' as *;
+
+
+.breadcrumb-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .breadcrumb-step {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+
+        .bc-item-icon-wrap {
+            flex-shrink: 0;
+
+            .bc-item-icon {
+                display: block;
+                width: 20px;
+                height: 20px;
+                color: #BFBFBF;
+            }
+        }
+
+        .bc-item-label {
+            color: #BFBFBF;
+            font-family: Inter;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 16px;
+            letter-spacing: -0.56px;
+            word-break: break-all;
+            @include app-ellipses(1);
+        }
+
+        &.breadcrumb-single {
+            cursor: initial;
+        }
+
+        &.breadcrumb-active {
+            cursor: initial;
+
+            .bc-item-icon-wrap {
+                .bc-item-icon {
+                    color: #000000;
+                }
+            }
+
+            .bc-item-label {
+                color: #000000;
+            }
+        }
+    }
+
+    .bc-arrow-icon-wrap {
+        flex-shrink: 0;
+
+        .bc-arrow-icon {
+            display: block;
+            width: 5px;
+            height: 8px;
+            color: #BFBFBF;
+        }
+    }
+}

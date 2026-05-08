@@ -1,0 +1,60 @@
+<div class="d-flex gap-2 justify-content-between">
+    <h4 class="mb-3">
+        Amenities
+    </h4>
+</div>
+
+<div class="bg-white rounded-3 shadow p-3 pt-4">
+    <div class="mb-3 border-bottom pb-2">
+        <!-- show asset details here -->
+        <h2 class="mb-0 fw-semibold fs-6 text-center text-muted">
+            <span class="text-capitalize fw-bold text-gray">
+                {{assetData?.title}}
+            </span>
+            under
+            <span class="text-capitalize fw-bold text-gray">
+                {{assetData?.propertyId?.title}}
+            </span>
+            property
+            <span class="badge rounded-pill text-uppercase"
+                [class]="assetData?.isPublished? 'bg-success' : 'bg-danger'">
+                {{assetData?.isPublished ? 'Published' : 'Unpublished'}}
+            </span>
+        </h2>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <!-- Amenities -->
+        @if(form.contains('amenities') && amenitiesKeys.length > 0) {
+        <div class="row mb-3" formGroupName="amenities">
+            @for (key of amenitiesKeys; track key;) {
+            <div class="col-md-6 col-lg-4 mb-3">
+                <span class="d-inline-block form-label mb-2 fw-semibold text-capitalize">
+                    {{assetConfigs.amenitiesMap[key]}}
+                </span>
+                <div [formGroupName]="key" class="d-flex flex-wrap column-gap-3 row-gap-1">
+                    @for (amenity of assetConfigs.amenities[key]; track amenity;) {
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="amenity-{{key}}-{{amenity}}"
+                            [formControlName]="amenity">
+                        <label class="form-check-label text-capitalize" for="amenity-{{key}}-{{amenity}}">
+                            <img width="24" height="24" [appSrc]="assetConfigs?.iconsMap?.[amenity]"
+                                style="padding: 2px;" defaultSrc="images/placeholder.svg" alt="{{amenity}}"
+                                class="me-1 bg-secondary rounded">
+                            {{amenity}}
+                        </label>
+                    </div>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+        }
+
+        <div class="d-flex gap-2 mt-3 mb-2">
+            <button class="btn btn-outline-primary mx-auto w-25">
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>

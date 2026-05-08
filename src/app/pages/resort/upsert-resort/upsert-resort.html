@@ -1,0 +1,389 @@
+<div class="modal d-block">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <form class="modal-content shadow-lg" [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5 text-capitalize">
+                    {{isEditMode ? 'Edit' : 'Create'}} Resort
+                </h1>
+                <button type="button" class="btn-close" (click)="onCloseOrCancel()"></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Resort name -->
+                <div class="mb-3">
+                    <label for="title" class="form-label">
+                        Resort name <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" id="title" formControlName="title" class="form-control" placeholder="Name">
+                    @if(f_title?.touched && f_title?.errors){
+                    <div class="invalid-feedback d-block">
+                        @if(f_title?.errors?.['required']){
+                        <span>Resort name is required.</span>
+                        }
+                        @if(f_title?.errors?.['maxlength']){
+                        <span>
+                            Resort name cannot exceed {{f_title?.errors?.['maxlength']?.requiredLength}} characters.
+                        </span>
+                        }
+                    </div>
+                    }
+                </div>
+
+                <!-- Phone and Email -->
+                <div class="row">
+                    <!-- Phone -->
+                    <div class="col-md-6 mb-3">
+                        <label for="phone" class="form-label">
+                            Phone <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="phone" formControlName="phone" class="form-control"
+                            placeholder="Phone number">
+
+                        @if(f_phone?.touched && f_phone?.errors){
+                        <div class="invalid-feedback d-block">
+                            @if(f_phone?.errors?.['required']){ <span>Phone is required.</span> }
+                            @if(f_phone?.errors?.['maxlength']){
+                            <span>
+                                Phone cannot exceed {{f_phone?.errors?.['maxlength']?.requiredLength}} characters.
+                            </span>
+                            }
+                        </div>
+                        }
+                    </div>
+                    <!-- Email -->
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">
+                            Email <span class="text-danger">*</span>
+                        </label>
+                        <input type="email" id="email" formControlName="email" class="form-control"
+                            placeholder="Email address">
+
+                        @if(f_email?.touched && f_email?.errors){
+                        <div class="invalid-feedback d-block">
+                            @if(f_email?.errors?.['required']){ <span>Email is required.</span> }
+                            @if(f_email?.errors?.['email']){ <span>Please enter a valid email address.</span> }
+                            @if(f_email?.errors?.['maxlength']){
+                            <span>
+                                Email cannot exceed {{f_email?.errors?.['maxlength']?.requiredLength}} characters.
+                            </span>
+                            }
+                        </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Destination -->
+                <div class="mb-3">
+                    <label for="destination" class="form-label">
+                        Destination <span class="text-danger">*</span>
+                    </label>
+                    <textarea id="destination" formControlName="destination" class="form-control" rows="2"
+                        placeholder="Destination"></textarea>
+                    @if(f_destination?.touched && f_destination?.errors){
+                    <div class="invalid-feedback d-block">
+                        @if(f_destination?.errors?.['required']){ <span>Destination is required.</span> }
+                        @if(f_destination?.errors?.['maxlength']){
+                        <span>
+                            Destination cannot exceed {{f_destination?.errors?.['maxlength']?.requiredLength}}
+                            characters.
+                        </span>
+                        }
+                    </div>
+                    }
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label for="description" class="form-label">
+                        Description <span class="text-danger">*</span>
+                    </label>
+                    <textarea id="description" formControlName="description" class="form-control" rows="3"
+                        placeholder="Description"></textarea>
+                    @if(f_description?.touched && f_description?.errors){
+                    <div class="invalid-feedback d-block">
+                        @if(f_description?.errors?.['required']){ <span>Description is required.</span> }
+                    </div>
+                    }
+                </div>
+
+                <!-- Facilities -->
+                <div class="mb-3">
+                    <div class="mt-3 mb-2 d-flex justify-content-center align-items-center">
+                        <hr class="w-100">
+                        <span class="mx-3 fw-bold text-nowrap text-muted fs-6">
+                            Facilities
+                        </span>
+                        <hr class="w-100">
+                    </div>
+                    <div class="d-flex justify-content-end mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" (click)="addFacilityRow()">
+                            Add facility
+                        </button>
+                    </div>
+                    <div formArrayName="facilities" cdkDropList cdkDropListOrientation="mixed"
+                        (cdkDropListDropped)="onFacilitiesDrop($event)" class="d-flex flex-column gap-2">
+                        @for (_ of f_facilities.controls; track $index; let i = $index) {
+                        <div [formGroupName]="i" class="border rounded p-2 bg-light position-relative" cdkDrag>
+                            <button type="button" (click)="removeFacilityRow(i)" tabindex="-1"
+                                class="btn btn-sm btn-outline-danger position-absolute lh-md top-0 end-0 m-1 py-0 px-2">
+                                X
+                            </button>
+                            <div class="d-flex flex-wrap gap-2 align-items-start pe-5">
+                                <div cdkDragHandle class="lh-md user-select-none text-muted cursor-grab"
+                                    title="Drag to reorder">
+                                    ::
+                                </div>
+                                <div class="flex-shrink-0">
+                                    @let iconUrl =
+                                    iconDropdownSelection(f_facilities.at(i).get('icon')?.value)?.value;
+                                    @if (iconUrl) {
+                                    <div class="resort-icon-thumb-well">
+                                        <img [appSrc]="iconUrl" alt="" draggable="false">
+                                    </div>
+                                    }
+                                </div>
+                                <div class="flex-grow-1" style="min-width: 10rem;">
+                                    <span class="form-label small mb-1 d-block">
+                                        Icon <span class="text-danger">*</span>
+                                    </span>
+                                    <app-icon-dropdown [optionsList]="iconOptions" placeholder="Select icon"
+                                        uniqueKey="key" displayKey1="key" thumbKey="value" [filterKeys]="['key']"
+                                        [selectedOption]="iconDropdownSelection(f_facilities.at(i).get('icon')?.value)"
+                                        [usedInModal]="true" btnClass="btn-sm"
+                                        (onSelect)="onFacilityIconChange(i, $event)" />
+
+                                    @if (f_facilities.at(i).get('icon')?.touched &&
+                                    f_facilities.at(i).get('icon')?.errors?.['required']) {
+                                    <span class="invalid-feedback d-block small">
+                                        Icon is required.
+                                    </span>
+                                    }
+                                </div>
+                                <div class="flex-grow-1" style="min-width: 8rem;">
+                                    <label class="form-label small mb-1 d-block" [attr.for]="'facility-label-'+i">
+                                        Label <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" id="facility-label-{{i}}"
+                                        formControlName="label" placeholder="Label">
+                                    @if (f_facilities.at(i).get('label')?.touched &&
+                                    f_facilities.at(i).get('label')?.errors?.['required']) {
+                                    <span class="invalid-feedback d-block small">
+                                        Label is required.
+                                    </span>
+                                    }
+                                    @if (f_facilities.at(i).get('label')?.touched &&
+                                    f_facilities.at(i).get('label')?.errors?.['maxlength']) {
+                                    <span class="invalid-feedback d-block small">
+                                        Label cannot exceed
+                                        {{f_facilities.at(i).get('label')?.errors?.['maxlength']?.requiredLength}}
+                                        characters.
+                                    </span>
+                                    }
+                                </div>
+                                <div class="flex-grow-1" style="min-width: 8rem;">
+                                    <label class="form-label small mb-1 d-block" [attr.for]="'facility-value-'+i">
+                                        Value
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" id="facility-value-{{i}}"
+                                        formControlName="value" placeholder="Value">
+                                </div>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="mb-3">
+                    <div class="mt-3 mb-2 d-flex justify-content-center align-items-center">
+                        <hr class="w-100">
+                        <span class="mx-3 fw-bold text-nowrap text-muted fs-6">
+                            Stats
+                        </span>
+                        <hr class="w-100">
+                    </div>
+                    <div class="d-flex justify-content-end mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" (click)="addStatRow()">
+                            Add stat
+                        </button>
+                    </div>
+                    <div formArrayName="stats" cdkDropList cdkDropListOrientation="mixed"
+                        (cdkDropListDropped)="onStatsDrop($event)" class="d-flex flex-column gap-2">
+                        @for (_ of f_stats.controls; track $index; let i = $index) {
+                        <div [formGroupName]="i" class="border rounded p-2 bg-light position-relative" cdkDrag>
+                            <button type="button" tabindex="-1" (click)="removeStatRow(i)"
+                                class="btn btn-sm btn-outline-danger position-absolute lh-md top-0 end-0 m-1 py-0 px-2">
+                                X
+                            </button>
+                            <div class="d-flex flex-wrap gap-2 align-items-start pe-5">
+                                <div cdkDragHandle class="lh-md user-select-none text-muted cursor-grab"
+                                    title="Drag to reorder">
+                                    ::
+                                </div>
+                                <div class="flex-shrink-0">
+                                    @let statIconUrl =
+                                    iconDropdownSelection(f_stats.at(i).get('icon')?.value)?.value;
+                                    @if (statIconUrl) {
+                                    <div class="resort-icon-thumb-well">
+                                        <img [appSrc]="statIconUrl" alt="" draggable="false">
+                                    </div>
+                                    }
+                                </div>
+                                <div class="flex-grow-1" style="min-width: 10rem;">
+                                    <span class="form-label small mb-1 d-block">
+                                        Icon <span class="text-danger">*</span>
+                                    </span>
+                                    <app-icon-dropdown
+                                        [selectedOption]="iconDropdownSelection(f_stats.at(i).get('icon')?.value)"
+                                        [optionsList]="iconOptions" placeholder="Select icon" uniqueKey="key"
+                                        displayKey1="key" thumbKey="value" [filterKeys]="['key']" [usedInModal]="true"
+                                        btnClass="btn-sm" (onSelect)="onStatIconChange(i, $event)" />
+
+                                    @if (f_stats.at(i).get('icon')?.touched &&
+                                    f_stats.at(i).get('icon')?.errors?.['required']) {
+                                    <span class="invalid-feedback d-block small">
+                                        Icon is required.
+                                    </span>
+                                    }
+                                </div>
+                                <div class="flex-grow-1" style="min-width: 8rem;">
+                                    <label class="form-label small mb-1 d-block" [attr.for]="'stat-label-'+i">
+                                        Label <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" id="stat-label-{{i}}"
+                                        formControlName="label" placeholder="Label">
+
+                                    @if (f_stats.at(i).get('label')?.touched &&
+                                    f_stats.at(i).get('label')?.errors?.['required']) {
+                                    <span class="invalid-feedback d-block small">
+                                        Label is required.
+                                    </span>
+                                    }
+                                    @if (f_stats.at(i).get('label')?.touched &&
+                                    f_stats.at(i).get('label')?.errors?.['maxlength']) {
+                                    <span class="invalid-feedback d-block small">
+                                        Label cannot exceed
+                                        {{f_stats.at(i).get('label')?.errors?.['maxlength']?.requiredLength}}
+                                        characters.
+                                    </span>
+                                    }
+                                </div>
+                                <div class="flex-grow-1" style="min-width: 8rem;">
+                                    <label class="form-label small mb-1 d-block" [attr.for]="'stat-value-'+i">
+                                        Value
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" id="stat-value-{{i}}"
+                                        formControlName="value" placeholder="Value">
+                                </div>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Location (embedded map URL + address on map card) -->
+                <div class="row mb-3">
+                    <div class="mt-3 mb-2 d-flex justify-content-center align-items-center">
+                        <hr class="w-100">
+                        <span class="mx-3 fw-bold text-nowrap text-muted fs-6">
+                            Location map
+                        </span>
+                        <hr class="w-100">
+                    </div>
+                    <div class="col-xl-6 row align-content-start mb-3" formGroupName="location">
+                        <div class="col-12 mb-3">
+                            <label for="resort-location-address" class="form-label">
+                                Address
+                            </label>
+                            <input type="text" id="resort-location-address" formControlName="address"
+                                class="form-control" placeholder="Address shown with the map">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="resort-location-mapUrl" class="form-label">
+                                Map embed URL
+                            </label>
+                            <input type="text" id="resort-location-mapUrl" formControlName="mapUrl" class="form-control"
+                                placeholder="Paste map URL or embed iframe code" (blur)="onMapUrlBlur()">
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <div class="col-12 mb-3">
+                            <label class="form-label text-muted small">
+                                Map Preview
+                            </label>
+                            @if (mapUrlPreview) {
+                            <div class="border rounded overflow-hidden bg-light">
+                                <iframe [src]="mapUrlPreview" title="Map preview" class="map-preview-iframe"
+                                    loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            </div>
+                            <a [href]="mapUrlForOpen" target="_blank" rel="noopener noreferrer"
+                                class="small text-primary mt-1 d-inline-block">
+                                Open in new tab
+                            </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Images -->
+                <div class="mb-2">
+                    <label class="form-label">
+                        Images <span class="text-danger">*</span>
+                    </label>
+                    <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                        <input type="file" class="form-control" accept="image/*" multiple
+                            [disabled]="displayedImages.length >= maxImages" (change)="onPickFiles($event)">
+                        <span class="text-muted small">Up to {{ maxImages }}</span>
+                    </div>
+
+                    <div class="row">
+                        @for (row of displayedImages; track row.id) {
+                        <div class="col-12 col-md-6 mb-3">
+                            <div class="border rounded p-2 bg-light position-relative">
+                                <div class="flex-shrink-0 border rounded bg-white p-1 mx-auto mb-2"
+                                    style="max-width: 250px; aspect-ratio: 16/9;">
+                                    @if (isRowUploading(row)) {
+                                    <div class="spinner-border spinner-border-sm text-primary"></div>
+                                    } @else if (row.url) {
+                                    <img [appSrc]="row.url" [attr.alt]="row.alt || 'Resort image'"
+                                        class="rounded d-block w-100 h-100 img-cover" draggable="false" loading="lazy">
+                                    } @else {
+                                    <span class="text-muted small">…</span>
+                                    }
+                                </div>
+                                <div class="flex-grow-1 d-flex align-items-center gap-2">
+                                    <input type="text" class="form-control form-control-sm" [value]="row.alt"
+                                        (input)="onAltInput(row, $event)" [disabled]="!row.url || isRowUploading(row)"
+                                        maxlength="255" placeholder="Short description (accessibility)">
+                                </div>
+                                <button type="button" tabindex="-1" (click)="removeImage(row)"
+                                    [disabled]="isRowUploading(row)"
+                                    class="btn btn-sm btn-outline-danger position-absolute lh-md top-0 end-0 m-1 py-0 px-2">
+                                    X
+                                </button>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary me-3" (click)="onCloseOrCancel()">
+                    Cancel
+                </button>
+                <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                    [class.disabled]="isReqAlive" [disabled]="isReqAlive">
+                    @if(!isReqAlive) {
+                    <span>
+                        {{isEditMode ? 'Save changes' : 'Create'}}
+                    </span>
+                    } @else {
+                    <span class="spinner-border spinner-border-sm"></span>
+                    <span role="status">&nbsp; Please wait…</span>
+                    }
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

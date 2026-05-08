@@ -1,0 +1,39 @@
+<div class="dropdown icon-dropdown-root">
+    <button class="btn btn-light w-100 dropdown-toggle text-capitalize icon-dropdown-trigger selected-option"
+        type="button" [class]="btnClass" [attr.data-bs-display]="usedInModal ? 'static' : null"
+        [attr.data-bs-toggle]="disabled ? '' : 'dropdown'" [disabled]="disabled" [style]="btnStyle">
+        {{ selectedOption ? displayText : placeholder }}
+    </button>
+
+    @if (!disabled) {
+    <!-- Wider than trigger (color-picker style); not w-100 so the grid can use horizontal space -->
+    <div class="dropdown-menu dropdown-menu-start p-0 icon-dropdown-panel shadow" [class]="listWrapClass">
+        @if (!disableSearch) {
+        <div class="bg-secondary-subtle border-bottom px-2 py-2 z-1">
+            <app-search-input (onSearch)="onSearchTerms($event)" />
+        </div>
+        }
+        <div class="icon-dropdown-scroll px-2 py-2">
+            @if (filteredList.length) {
+            <div class="icon-dropdown-grid">
+                @for (option of filteredList; track trackByUniqueKey(i, option); let i = $index) {
+                <button type="button" class="icon-dropdown-tile dropdown-item"
+                    [class.icon-dropdown-tile--selected]="isSelected(option)" [attr.title]="labelTitle(option)"
+                    [attr.aria-label]="labelTitle(option)" (click)="onOptionChange(option)">
+
+                    @if (thumbKey && option[thumbKey]) {
+                    <img [appSrc]="option[thumbKey]" alt="" class="icon-dropdown-swatch" loading="lazy"
+                        draggable="false">
+                    }
+                </button>
+                }
+            </div>
+            } @else {
+            <div class="py-4 text-center text-muted small">
+                No records found.
+            </div>
+            }
+        </div>
+    </div>
+    }
+</div>

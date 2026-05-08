@@ -1,0 +1,13 @@
+@use './../../../styles/mixins' as *;
+
+
+.selected-option {
+    @include app-ellipses(1);
+    white-space: normal;
+}
+
+.option-item {
+    @include app-ellipses(1);
+    white-space: normal;
+    cursor: pointer;
+}

@@ -1,0 +1,211 @@
+@use 'app/styles' as *;
+
+
+// .container-fluid {
+//     .side-nav {
+//         height: 100vh;
+//         max-height: 100vh;
+
+//         .side-nav-wrapper {
+//             width: 100%;
+//             max-width: 250px;
+//             height: 100%;
+//             display: flex;
+//             flex-direction: column;
+
+//             .nav-menu-wrapper {
+//                 margin: 0;
+//                 padding: 6px 12px;
+//                 min-height: 300px;
+//                 flex: 1;
+//                 flex-wrap: nowrap;
+//                 display: flex;
+//                 flex-direction: column;
+//                 list-style: none;
+//                 @include app-scrollbar();
+
+//                 .menu-item {
+//                     a {
+//                         &:hover {
+//                             background-color: $gray;
+//                         }
+
+//                         small {
+//                             @include app-ellipses();
+//                         }
+//                     }
+
+//                     &.active {
+//                         a {
+//                             background-color: $gray;
+//                         }
+//                     }
+//                 }
+//             }
+
+//             .side-nav-footer {
+//                 padding: 12px 12px;
+//             }
+//         }
+
+//         &.collapsed {
+//             .side-nav-wrapper {
+//                 .nav-menu-wrapper {
+//                     .menu-item {
+//                         a {
+//                             small {
+//                                 display: none;
+//                             }
+//                         }
+//                     }
+//                 }
+
+//                 .side-nav-footer {
+//                     button span {
+//                         display: none;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
+
+
+
+.container-fluid {
+    .side-nav {
+        width: auto;
+        height: 100vh;
+        max-height: 100vh;
+        z-index: 99;
+
+        .side-nav-wrapper {
+            width: 100%;
+            max-width: 280px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+
+            .side-nav-header {
+                height: var(--header-height);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                .brand-logo {
+                    display: block;
+                    width: 42px;
+                    height: 42px;
+                }
+            }
+
+            .nav-menu-wrapper {
+                margin: 0;
+                padding: 6px 12px;
+                min-height: 300px;
+                flex: 1;
+                flex-wrap: nowrap;
+                display: flex;
+                flex-direction: column;
+                gap: 0.3em;
+                list-style: none;
+                @include app-scrollbar();
+
+                .menu-item {
+                    &:not(.bg-primary):hover {
+                        background-color: rgba(var(--bs-primary-rgb), 0.2);
+
+                        div {
+                            color: var(--bs-primary);
+                        }
+                    }
+
+                    .menu-icon {
+                        width: 32px;
+                        height: 32px
+                    }
+
+                    .menu-label {
+                        @include app-ellipses();
+                    }
+                }
+            }
+
+            .side-nav-footer {
+                padding: 12px 12px;
+
+                .f-menu-icon {
+                    width: 24px;
+                    height: 24px;
+                }
+            }
+        }
+
+        &.collapsed {
+            width: max-content;
+
+            .side-nav-wrapper {
+                .side-nav-header {
+                    .brand-logo {
+                        margin: auto;
+                        width: 42px;
+                        height: 42px;
+                    }
+                }
+
+                .nav-menu-wrapper {
+                    .menu-item {
+                        .menu-label {
+                            display: none;
+                        }
+                    }
+                }
+
+                .side-nav-footer {
+                    button span {
+                        display: none;
+                    }
+                }
+            }
+        }
+    }
+
+    @media screen and (max-width: 768px) {
+        .side-nav {
+            font-size: 0.875em;
+
+            .side-nav-wrapper {
+                &.m-view {
+                    max-width: 180px;
+
+                    .side-nav-header {
+                        .brand-logo {
+                            width: 32px !important;
+                            height: 32px !important;
+                        }
+                    }
+
+                    .nav-menu-wrapper {
+                        padding: 4px 8px;
+
+                        .menu-item {
+                            .menu-icon {
+                                width: 24px;
+                                height: 24px
+                            }
+                        }
+                    }
+
+                    .side-nav-footer {
+                        padding: 12px 6px;
+
+                        .f-menu-icon {
+                            width: 18px;
+                            height: 18px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
