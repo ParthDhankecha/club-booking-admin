@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/shared/components/entries-per-page-selector/entries-per-page-selector.scss"],
+  "sourcesContent": [":host {\n    display: contents;\n}"],
+  "mappings": ";AAAA;AACI,WAAA;;",
+  "names": []
+}

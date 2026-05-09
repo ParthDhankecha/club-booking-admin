@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/layouts/common-outlet/common-outlet.ts", "src/app/layouts/common-outlet/common-outlet.html"],
+  "sourcesContent": ["import { Component } from '@angular/core';\nimport { RouterOutlet } from '@angular/router';\n\n@Component({\n  selector: 'app-common-outlet',\n  imports: [RouterOutlet],\n  templateUrl: './common-outlet.html',\n  styleUrl: './common-outlet.scss'\n})\nexport class CommonOutlet { }", "<router-outlet />"],
+  "mappings": ";;;;;;;;;;AASM,IAAO,eAAP,MAAO,cAAY;;qCAAZ,eAAY;EAAA;yEAAZ,eAAY,WAAA,CAAA,CAAA,mBAAA,CAAA,GAAA,OAAA,GAAA,MAAA,GAAA,UAAA,SAAA,sBAAA,IAAA,KAAA;AAAA,QAAA,KAAA,GAAA;ACTzB,MAAA,oBAAA,GAAA,eAAA;;oBDKY,YAAY,GAAA,eAAA,EAAA,CAAA;;;sEAIX,cAAY,CAAA;UANxB;uBACW,qBAAmB,SACpB,CAAC,YAAY,GAAC,UAAA,oBAAA,CAAA;;;;6EAIZ,cAAY,EAAA,WAAA,gBAAA,UAAA,kDAAA,YAAA,GAAA,CAAA;AAAA,GAAA;",
+  "names": []
+}

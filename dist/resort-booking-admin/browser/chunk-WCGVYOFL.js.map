@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/shared/components/page-not-found/page-not-found.ts", "src/app/shared/components/page-not-found/page-not-found.html"],
+  "sourcesContent": ["import { Component } from '@angular/core';\n\n\n@Component({\n  selector: 'app-page-not-found',\n  imports: [],\n  templateUrl: './page-not-found.html',\n  styleUrl: './page-not-found.scss'\n})\nexport class PageNotFound {\n  ngOnInit() { }\n}", "<p>Page not found!</p>"],
+  "mappings": ";;;;;;;;;;;AASM,IAAO,eAAP,MAAO,cAAY;EACvB,WAAQ;EAAK;;qCADF,eAAY;EAAA;yEAAZ,eAAY,WAAA,CAAA,CAAA,oBAAA,CAAA,GAAA,OAAA,GAAA,MAAA,GAAA,UAAA,SAAA,sBAAA,IAAA,KAAA;AAAA,QAAA,KAAA,GAAA;ACTzB,MAAA,4BAAA,GAAA,GAAA;AAAG,MAAA,iBAAA,GAAA,iBAAA;AAAe,MAAA,0BAAA;;;;;sEDSL,cAAY,CAAA;UANxB;uBACW,sBAAoB,SACrB,CAAA,GAAE,UAAA,yBAAA,CAAA;;;;6EAIA,cAAY,EAAA,WAAA,gBAAA,UAAA,8DAAA,YAAA,GAAA,CAAA;AAAA,GAAA;",
+  "names": []
+}
