@@ -38,7 +38,17 @@ export class MainLayout {
       label: 'Booking Calendar',
       link: ROUTES.CALENDAR,
       icon: 'calendar'
-    }
+    },
+    {
+      label: 'Contact Us',
+      link: ROUTES.CONTACT_US,
+      icon: 'list'
+    },
+    {
+      label: 'Newsletter',
+      link: ROUTES.NEWSLETTER,
+      icon: 'list'
+    },
   ];
 
   protected isSidebarCollapsed: boolean = false;

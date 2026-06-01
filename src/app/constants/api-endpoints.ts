@@ -4,6 +4,8 @@ const _RESORT = '/resort';
 const _PROPERTY = '/property';
 const _ASSET = '/asset';
 const _CALENDAR = '/calendar';
+const _CONTACT_US = '/contact-us';
+const _NEWSLETTER = '/newsletter';
 
 
 export const API_ENDPOINTS = {
@@ -49,5 +51,13 @@ export const API_ENDPOINTS = {
     CALENDAR: {
         VIEW: `${_CALENDAR}/view`,
         DETAILS: `${_CALENDAR}/details`,
+    },
+
+    CONTACT_US: {
+        LIST: `${_CONTACT_US}/list`,
+    },
+
+    NEWSLETTER: {
+        LIST: `${_NEWSLETTER}/list`,
     },
 };

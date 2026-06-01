@@ -15,6 +15,8 @@ export const APP_PAGE_TITLE = {
         UPSERT_IMAGES: `Upsert Images ${TITLE_POSTFIX}`,
     },
     CALENDAR: `Booking Calendar ${TITLE_POSTFIX}`,
+    CONTACT_US: `Contact Us ${TITLE_POSTFIX}`,
+    NEWSLETTER: `Newsletter ${TITLE_POSTFIX}`,
     TERMS_AND_CONDITIONS: `Terms and Conditions ${TITLE_POSTFIX}`,
     PRIVACY_POLICY: `Privacy Policy ${TITLE_POSTFIX}`,
     SUPPORT: `Support ${TITLE_POSTFIX}`,

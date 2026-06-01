@@ -6,6 +6,8 @@ import { Resort } from './resort/resort';
 import { Property } from './property/property';
 import { Asset } from './asset/asset';
 import { Calendar } from './calendar/calendar';
+import { ContactUs } from './contact-us/contact-us';
+import { Newsletter } from './newsletter/newsletter';
 
 
 @Injectable({
@@ -21,4 +23,6 @@ export class ApiFacadeService {
   public readonly property = inject(Property);
   public readonly asset = inject(Asset);
   public readonly calendar = inject(Calendar);
+  public readonly contactUs = inject(ContactUs);
+  public readonly newsletter = inject(Newsletter);
 }
