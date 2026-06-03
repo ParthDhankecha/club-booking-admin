@@ -23,6 +23,7 @@ export const API_ENDPOINTS = {
         CREATE: `${_RESORT}`,
         OPTIONS_DATA: `${_RESORT}/options-data`,
         UPDATE: (id: string) => `${_RESORT}/${id}`,
+        UPDATE_METADATA: (id: string) => `${_RESORT}/${id}/metadata`,
         DELETE: (id: string) => `${_RESORT}/${id}`,
     },
 
@@ -45,6 +46,7 @@ export const API_ENDPOINTS = {
         UPSERT_IMAGE: (id: string) => `${_ASSET}/upsert-image/${id}`,
         REMOVE_IMAGE: (id: string) => `${_ASSET}/remove-image/${id}`,
         UPDATE: (id: string) => `${_ASSET}/${id}`,
+        UPDATE_METADATA: (id: string) => `${_ASSET}/${id}/metadata`,
         DELETE: (id: string) => `${_ASSET}/${id}`,
     },
 

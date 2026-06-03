@@ -26,9 +26,8 @@ export class FileDrop {
     event.stopPropagation();
 
     const files = event.dataTransfer?.files;
-    if (files) {
-      this.filesDropped.emit(files);  // Emit the dropped files
-      console.log('Files dropped:', files);
+    if (files) {// Emit the dropped files
+      this.filesDropped.emit(files);
     }
   }
 }

@@ -1,0 +1,152 @@
+<div class="modal d-block">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+        <div class="modal-content shadow-lg resort-gallery-modal">
+            <div class="modal-header">
+                <div>
+                    <h1 class="modal-title fs-5 text-capitalize">
+                        Gallery -
+                        <span class="text-muted small text-capitalize">
+                            {{ data?.title || 'Resort' }}
+                        </span>
+                    </h1>
+                </div>
+                <button type="button" class="btn-close" (click)="onCloseOrCancel()" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body pt-3">
+                <div class="gallery-toolbar d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="gallery-count-badge">
+                            {{ displayedImages.length }} / {{ maxImages }}
+                        </span>
+                        <span class="text-muted small d-none d-sm-inline">
+                            images
+                        </span>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1"
+                        [disabled]="!canAddMore" (click)="triggerFilePick()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                            viewBox="0 0 16 16" aria-hidden="true">
+                            <path
+                                d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                            <path
+                                d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
+                        </svg>
+                        Add photos
+                    </button>
+                    <input #fileInput type="file" class="d-none" accept="image/*" multiple [disabled]="!canAddMore"
+                        (change)="onPickFiles($event)">
+                </div>
+
+                @if (canAddMore) {
+                <button type="button" class="gallery-upload-zone w-100 mb-4" (click)="triggerFilePick()"
+                    [disabled]="!canAddMore">
+                    <span class="icon" aria-hidden="true">
+                        <svg width="80" height="80" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <g fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M29.4995,12.3739c.7719-.0965,1.5437,.4824,1.5437,1.2543h0l2.5085,23.8312c.0965,.7719-.4824,1.5437-1.2543,1.5437l-23.7347,2.5085c-.7719,.0965-1.5437-.4824-1.5437-1.2543h0l-2.5085-23.7347c-.0965-.7719,.4824-1.5437,1.2543-1.5437l23.7347-2.605Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12.9045,18.9347c-1.7367,.193-3.0874,1.7367-2.8945,3.5699,.193,1.7367,1.7367,3.0874,3.5699,2.8945,1.7367-.193,3.0874-1.7367,2.8945-3.5699s-1.8332-3.0874-3.5699-2.8945h0Zm8.7799,5.596l-4.6312,5.6925c-.193,.193-.4824,.2894-.6754,.0965h0l-1.0613-.8683c-.193-.193-.5789-.0965-.6754,.0965l-5.0171,6.1749c-.193,.193-.193,.5789,.0965,.6754-.0965,.0965,.0965,.0965,.193,.0965l19.9719-2.1226c.2894,0,.4824-.2894,.4824-.5789,0-.0965-.0965-.193-.0965-.2894l-7.8151-9.0694c-.2894-.0965-.5789-.0965-.7719,.0965h0Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M16.2814,13.8211l.6754-6.0784c.0965-.7719,.7719-1.3508,1.5437-1.2543l23.7347,2.5085c.7719,.0965,1.3508,.7719,1.2543,1.5437h0l-2.5085,23.7347c0,.6754-.7719,1.2543-1.5437,1.2543l-6.1749-.6754" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M32.7799,29.9337l5.3065,.5789c.2894,0,.4824-.193,.5789-.4824,0-.0965,0-.193-.0965-.2894l-5.789-10.5166c-.0965-.193-.4824-.2894-.6754-.193h0l-.3859,.3859" />
+                            </g>
+                        </svg>
+                    </span>
+                    <span class="title">
+                        Drop photos here or click to browse
+                    </span>
+                    <span class="hint text-muted">
+                        JPG, PNG — up to {{ maxImages }} images total
+                    </span>
+                </button>
+                }
+
+                @if (displayedImages.length) {
+                <div class="row g-3">
+                    @for (row of displayedImages; track row.id; let i = $index) {
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <article class="gallery-card h-100">
+                            <div class="gallery-card__media">
+                                @if (isRowUploading(row)) {
+                                <div class="gallery-card__loading">
+                                    <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+                                    <span class="small text-muted mt-2">
+                                        Uploading…
+                                    </span>
+                                </div>
+                                } @else if (row.url) {
+                                <img [appSrc]="row.url" [attr.alt]="row.alt || 'Resort image'" class="gallery-card__img"
+                                    draggable="false" loading="lazy">
+                                } @else {
+                                <div class="gallery-card__loading">
+                                    <span class="spinner-border spinner-border-sm text-secondary" role="status"></span>
+                                </div>
+                                }
+
+                                <div class="gallery-card__overlay">
+                                    <div class="dropdown">
+                                        <button type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                                            title="Image options"
+                                            class="btn btn-sm btn-light gallery-card__menu-btn shadow-sm"
+                                            [disabled]="isRowUploading(row)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                fill="currentColor" class="bi bi-three-dots-vertical"
+                                                viewBox="0 0 16 16">
+                                                <path
+                                                    d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+                                            </svg>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                            <li>
+                                                <button class="dropdown-item small text-danger" type="button"
+                                                    (click)="removeImage(row)">
+                                                    Remove
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <span class="gallery-card__index badge text-bg-dark">
+                                    {{ i + 1 }}
+                                </span>
+                            </div>
+
+                            <div class="gallery-card__footer">
+                                <input type="text" class="form-control form-control-sm" [id]="'gallery-alt-'+row.id"
+                                    [value]="row.alt" (input)="onAltInput(row, $event)"
+                                    [disabled]="!row.url || isRowUploading(row)" maxlength="255"
+                                    placeholder="Enter accessibility description…">
+                            </div>
+                        </article>
+                    </div>
+                    }
+                </div>
+                } @else if (!canAddMore) {
+                <p class="text-muted small text-center mb-0 py-4">
+                    Maximum number of images reached.
+                </p>
+                }
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" (click)="onCloseOrCancel()">
+                    Cancel
+                </button>
+                <button type="button"
+                    class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2"
+                    [class.disabled]="isReqAlive" [disabled]="isReqAlive" (click)="onSubmit()">
+                    @if(!isReqAlive) {
+                    <span>Save gallery</span>
+                    } @else {
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                    <span>Saving…</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

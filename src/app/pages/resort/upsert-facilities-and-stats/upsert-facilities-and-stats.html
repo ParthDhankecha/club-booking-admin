@@ -1,0 +1,165 @@
+<div class="modal d-block">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down modal-lg">
+        <form class="modal-content shadow-lg resort-facilities-stats-modal" [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="modal-header">
+                <div>
+                    <h1 class="modal-title fs-5 text-capitalize">
+                        Facilities &amp; Stats -
+                        <span class="text-muted small text-capitalize">
+                            {{ data?.title || 'Resort' }}
+                        </span>
+                    </h1>
+                </div>
+                <button type="button" class="btn-close" (click)="onCloseOrCancel()" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body pt-3">
+                <!-- Facilities -->
+                <div class="mb-3">
+                    <div class="mt-1 mb-2 d-flex justify-content-center align-items-center">
+                        <hr class="w-100">
+                        <span class="mx-3 fw-bold text-nowrap text-muted fs-6">
+                            Facilities
+                        </span>
+                        <hr class="w-100">
+                    </div>
+                    <div formArrayName="facilities" cdkDropList cdkDropListOrientation="mixed"
+                        (cdkDropListDropped)="onFacilitiesDrop($event)" class="d-flex flex-column gap-2">
+                        @for (_ of f_facilities.controls; track $index; let i = $index) {
+                        <div [formGroupName]="i" class="border rounded p-2 bg-light position-relative" cdkDrag>
+                            <div class="d-flex flex-wrap gap-2 align-items-start">
+                                <div class="align-self-center lh-1 p-1 pt-0 user-select-none text-muted cursor-grab"
+                                    cdkDragHandle title="Drag to reorder" tabindex="-1">
+                                    ::
+                                </div>
+
+                                <div class="flex-shrink-0">
+                                    <app-icon-dropdown [optionsList]="iconOptions" placeholder="Select icon"
+                                        uniqueKey="key" displayKey1="key" thumbKey="value" [filterKeys]="['key']"
+                                        [selectedOption]="iconDropdownSelection(f_facilities.at(i).get('icon')?.value)"
+                                        [usedInModal]="true" btnClass="btn-sm"
+                                        (onSelect)="onFacilityIconChange(i, $event)" />
+                                </div>
+
+                                <div class="flex-grow-1">
+                                    <input type="text" class="form-control form-control-sm" id="facility-label-{{i}}"
+                                        formControlName="label" placeholder="Label *">
+
+                                    @if (f_facilities.at(i).get('label')?.touched &&
+                                    f_facilities.at(i).get('label')?.errors) {
+                                    <span class="invalid-feedback d-block small m-0">
+                                        @if (f_facilities.at(i).get('label')?.errors?.['required']){
+                                        Label is required.
+                                        }@else if (f_facilities.at(i).get('label')?.errors?.['maxlength']){
+                                        Label cannot exceed
+                                        {{f_facilities.at(i).get('label')?.errors?.['maxlength']?.requiredLength}}
+                                        characters.
+                                        }
+                                    </span>
+                                    }
+                                </div>
+
+                                <div class="flex-grow-1">
+                                    <input type="text" class="form-control form-control-sm" id="facility-value-{{i}}"
+                                        formControlName="value" placeholder="Value">
+                                </div>
+
+                                <button type="button" (click)="removeFacilityRow(i)" tabindex="-1"
+                                    class="btn btn-sm btn-outline-danger lh-md py-0 px-2">
+                                    X
+                                </button>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                    <div class="d-flex mt-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary mx-auto" (click)="addFacilityRow()">
+                            Add facility
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="mb-3">
+                    <div class="mt-3 mb-2 d-flex justify-content-center align-items-center">
+                        <hr class="w-100">
+                        <span class="mx-3 fw-bold text-nowrap text-muted fs-6">
+                            Stats
+                        </span>
+                        <hr class="w-100">
+                    </div>
+                    <div formArrayName="stats" cdkDropList cdkDropListOrientation="mixed"
+                        (cdkDropListDropped)="onStatsDrop($event)" class="d-flex flex-column gap-2">
+                        @for (_ of f_stats.controls; track $index; let i = $index) {
+                        <div [formGroupName]="i" class="border rounded p-2 bg-light position-relative" cdkDrag>
+                            <div class="d-flex flex-wrap gap-2 align-items-start">
+                                <div cdkDragHandle
+                                    class="align-self-center lh-1 p-1 pt-0 user-select-none text-muted cursor-grab"
+                                    title="Drag to reorder">
+                                    ::
+                                </div>
+
+                                <div class="flex-shrink-0">
+                                    <app-icon-dropdown
+                                        [selectedOption]="iconDropdownSelection(f_stats.at(i).get('icon')?.value)"
+                                        [optionsList]="iconOptions" placeholder="Select icon" uniqueKey="key"
+                                        displayKey1="key" thumbKey="value" [filterKeys]="['key']" [usedInModal]="true"
+                                        btnClass="btn-sm" (onSelect)="onStatIconChange(i, $event)" />
+                                </div>
+
+                                <div class="flex-grow-1">
+                                    <input type="text" class="form-control form-control-sm" id="stat-label-{{i}}"
+                                        formControlName="label" placeholder="Label *">
+
+                                    @if (f_stats.at(i).get('label')?.touched &&
+                                    f_stats.at(i).get('label')?.errors) {
+                                    <span class="invalid-feedback d-block small m-0">
+                                        @if (f_stats.at(i).get('label')?.errors?.['required']){
+                                        Label is required.
+                                        }@else if (f_stats.at(i).get('label')?.errors?.['maxlength']){
+                                        Label cannot exceed
+                                        {{f_stats.at(i).get('label')?.errors?.['maxlength']?.requiredLength}}
+                                        characters.
+                                        }
+                                    </span>
+                                    }
+                                </div>
+                                <div class="flex-grow-1">
+                                    <input type="text" class="form-control form-control-sm" id="stat-value-{{i}}"
+                                        formControlName="value" placeholder="Value">
+                                </div>
+                                <button type="button" tabindex="-1" (click)="removeStatRow(i)"
+                                    class="btn btn-sm btn-outline-danger lh-md py-0 px-2">
+                                    X
+                                </button>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                    <div class="d-flex mt-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary mx-auto" (click)="addStatRow()">
+                            Add stat
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" (click)="onCloseOrCancel()">
+                    Cancel
+                </button>
+
+                <button type="submit"
+                    class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2"
+                    [class.disabled]="isReqAlive" [disabled]="isReqAlive">
+                    @if(!isReqAlive) {
+                    <span>Save changes</span>
+                    } @else {
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                    <span>Saving…</span>
+                    }
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
