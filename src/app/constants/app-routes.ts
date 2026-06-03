@@ -13,6 +13,8 @@ export const ROUTES = {
         UPSERT_IMAGES: 'upsert-images/:id',
     },
     CALENDAR: 'calendar',
+    CONTACT_US: 'contact-us',
+    NEWSLETTER: 'newsletter',
     TERMS_AND_CONDITIONS: 'terms-and-condition',
     PRIVACY_POLICY: 'privacy-policy',
     SUPPORT: 'support',

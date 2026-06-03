@@ -9,6 +9,7 @@ import { Pagination } from '@src/app/shared/components/pagination/pagination';
 import { RegisterModalLayer } from '@src/app/shared/directives/register-modal-layer';
 import { CommonDropdown } from '@src/app/shared/components/common-dropdown/common-dropdown';
 import { UpsertAsset } from './upsert-asset/upsert-asset';
+import { UpsertMetadata } from './pages/upsert-metadata/upsert-metadata';
 
 import { ApiFacadeService } from '@src/app/services/api-facade-service';
 import { CoreFacadeService } from '@src/app/core/services/core-facade-service';
@@ -24,6 +25,7 @@ import { ROUTES } from '@src/app/constants/app-routes';
     ModalLayer,
     RegisterModalLayer,
     UpsertAsset,
+    UpsertMetadata,
     DatePipe,
     Pagination,
     CommonDropdown
@@ -39,6 +41,7 @@ export class Asset {
 
   protected isUpsertModalOpen: boolean = false;
   protected readonly upsertAssetModalId: string = 'upsert-asset-modal';
+  protected readonly upsertAssetMetadataModalId: string = 'upsert-asset-metadata-modal';
   protected readonly deleteAssetModalId: string = 'delete-asset-modal';
   protected readonly changeAssetStatusModalId: string = 'change-asset-status-modal';
 
@@ -230,6 +233,25 @@ export class Asset {
     this.assetData = null;
     if (event) { this.getAssets(); } // reload assets list
     this._coreService.modal.close(this.upsertAssetModalId);
+  }
+
+  protected onEditMetadata(asset: any): void {
+    if (!asset) return;
+    this.assetData = { ...asset };
+    this._coreService.modal.open(this.upsertAssetMetadataModalId);
+  }
+
+  protected onUpsertMetadata(event: any): void {
+    if (event) {
+      const i = this.assets.findIndex((a) => a._id === this.assetData?._id);
+      if (i !== -1) {
+        this.assets[i] = { ...this.assets[i], metadata: event.metadata };
+      } else {
+        this.getAssets();
+      }
+    }
+    this.assetData = null;
+    this._coreService.modal.close(this.upsertAssetMetadataModalId);
   }
 
   // edit amenities

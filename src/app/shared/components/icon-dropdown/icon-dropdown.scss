@@ -3,7 +3,23 @@
 
 .icon-dropdown-root {
     .icon-dropdown-trigger {
-        &.selected-option {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        width: auto !important;
+
+        .selected-option-thumb {
+            width: 1.75rem;
+            height: 1.75rem;
+            object-fit: contain;
+            object-position: center;
+            display: block;
+            pointer-events: none;
+            filter: invert(0.8);
+        }
+
+        .selected-option-text {
             @include app-ellipses(1);
             white-space: normal;
         }

@@ -50,6 +50,10 @@ export class Asset {
     return this._http.patch(this._ENDPOINTS.UPDATE(id), body);
   }
 
+  updateMetadata(id: string, body: FormData): Observable<IResponse> {
+    return this._http.patch(this._ENDPOINTS.UPDATE_METADATA(id), body, { multipart: true });
+  }
+
   delete(id: string): Observable<IResponse> {
     return this._http.delete(this._ENDPOINTS.DELETE(id));
   }

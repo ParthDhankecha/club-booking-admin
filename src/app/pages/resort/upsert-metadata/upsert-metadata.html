@@ -1,0 +1,127 @@
+<div class="modal d-block">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <form class="modal-content shadow-lg resort-metadata-modal" [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="modal-header">
+                <div>
+                    <h1 class="modal-title fs-5 text-capitalize">
+                        Metadata -
+                        <span class="text-muted small text-capitalize">
+                            {{ data?.title || 'Resort' }}
+                        </span>
+                    </h1>
+                </div>
+                <button type="button" class="btn-close" (click)="onCloseOrCancel()" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="metadata-slug" class="form-label">
+                            Slug <span class="text-danger">*</span>
+                        </label>
+                        <input id="metadata-slug" type="text" class="form-control" formControlName="slug"
+                            placeholder="e.g. sahyadri-valley-resort">
+
+                        @if (form.get('slug')?.touched && form.get('slug')?.errors) {
+                        <span class="invalid-feedback d-block small m-0">
+                            @if (form.get('slug')?.errors?.['required']) {
+                            Slug is required.
+                            } @else if (form.get('slug')?.errors?.['minlength']) {
+                            Slug cannot be less than 3 characters.
+                            } @else if (form.get('slug')?.errors?.['maxlength']) {
+                            Slug cannot exceed 200 characters.
+                            } @else if (form.get('slug')?.errors?.['pattern']) {
+                            Slug can only contain letters, numbers, and hyphens.
+                            }
+                        </span>
+                        }
+                    </div>
+
+                    <div class="col-12">
+                        <label for="metadata-title" class="form-label">
+                            Meta title <span class="text-danger">*</span>
+                        </label>
+                        <input id="metadata-title" type="text" class="form-control" formControlName="title"
+                            placeholder="Enter metadata title">
+
+                        @if (form.get('title')?.touched && form.get('title')?.errors) {
+                        <span class="invalid-feedback d-block small m-0">
+                            @if (form.get('title')?.errors?.['required']) {
+                            Title is required.
+                            } @else if (form.get('title')?.errors?.['maxlength']) {
+                            Title cannot exceed 200 characters.
+                            }
+                        </span>
+                        }
+                    </div>
+
+                    <div class="col-12">
+                        <label for="metadata-description" class="form-label">
+                            Meta description <span class="text-danger">*</span>
+                        </label>
+                        <textarea id="metadata-description" rows="4" class="form-control" formControlName="description"
+                            placeholder="Enter metadata description"></textarea>
+
+                        @if (form.get('description')?.touched && form.get('description')?.errors) {
+                        <span class="invalid-feedback d-block small m-0">
+                            @if (form.get('description')?.errors?.['required']) {
+                            Description is required.
+                            } @else if (form.get('description')?.errors?.['maxlength']) {
+                            Description cannot exceed 800 characters.
+                            }
+                        </span>
+                        }
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">
+                            Image
+                        </label>
+                        <div class="metadata-image-wrap" appFileDrop (filesDropped)="onImageDrop($event)">
+                            @if (selectedImagePreview) {
+                            <img [appSrc]="selectedImagePreview" alt="Selected metadata image" class="metadata-preview">
+                            } @else if (currentImageUrl) {
+                            <img [appSrc]="currentImageUrl" alt="Current metadata image" class="metadata-preview">
+                            } @else {
+                            <div class="metadata-preview metadata-preview--empty">
+                                No image selected
+                            </div>
+                            }
+                            <div class="drop-hint">
+                                Drag &amp; drop image here
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm" (click)="openFilePicker()">
+                                Upload image
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm"
+                                [disabled]="!selectedImagePreview && !currentImageUrl" (click)="removeImage()">
+                                Remove image
+                            </button>
+                            <input #fileInput type="file" class="d-none" accept="image/*"
+                                (change)="onPickImage($event)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" (click)="onCloseOrCancel()">
+                    Cancel
+                </button>
+                <button type="submit"
+                    class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2"
+                    [class.disabled]="isReqAlive" [disabled]="isReqAlive">
+                    @if(!isReqAlive) {
+                    <span>Save metadata</span>
+                    } @else {
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                    <span>Saving...</span>
+                    }
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

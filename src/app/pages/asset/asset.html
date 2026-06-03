@@ -109,6 +109,11 @@
                                     </button>
                                 </li>
                                 <li>
+                                    <button class="dropdown-item" type="button" (click)="onEditMetadata(asset)">
+                                        Metadata
+                                    </button>
+                                </li>
+                                <li>
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
@@ -148,6 +153,13 @@
     <app-upsert-asset [data]="assetData" [propertyList]="_propertyList" [resortList]="resortList"
         [selectedResort]="selectedResort" [selectedProperty]="selectedProperty" [assetConfigs]="assetConfigs"
         (upsert)="onUpsertAsset($event)" />
+    }
+</app-modal-layer>
+
+<!-- Upsert Asset Metadata Modal -->
+<app-modal-layer [appRegisterModalLayer]="upsertAssetMetadataModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(upsertAssetMetadataModalId)) {
+    <app-upsert-asset-metadata [data]="assetData" (upsert)="onUpsertMetadata($event)" />
     }
 </app-modal-layer>
 

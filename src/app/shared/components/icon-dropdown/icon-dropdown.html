@@ -1,8 +1,15 @@
 <div class="dropdown icon-dropdown-root">
-    <button class="btn btn-light w-100 dropdown-toggle text-capitalize icon-dropdown-trigger selected-option"
-        type="button" [class]="btnClass" [attr.data-bs-display]="usedInModal ? 'static' : null"
+    <button class="btn btn-light w-100 dropdown-toggle text-capitalize icon-dropdown-trigger" type="button"
+        [class]="btnClass" [attr.data-bs-display]="usedInModal ? 'static' : null"
         [attr.data-bs-toggle]="disabled ? '' : 'dropdown'" [disabled]="disabled" [style]="btnStyle">
-        {{ selectedOption ? displayText : placeholder }}
+        @if (thumbKey) {
+        <img [appSrc]="selectedOption?.[thumbKey]" alt="" class="selected-option-thumb" loading="lazy"
+            draggable="false">
+        }@else {
+        <span class="selected-option-text">
+            {{ selectedOption ? displayText : placeholder }}
+        </span>
+        }
     </button>
 
     @if (!disabled) {

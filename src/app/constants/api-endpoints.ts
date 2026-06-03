@@ -4,6 +4,8 @@ const _RESORT = '/resort';
 const _PROPERTY = '/property';
 const _ASSET = '/asset';
 const _CALENDAR = '/calendar';
+const _CONTACT_US = '/contact-us';
+const _NEWSLETTER = '/newsletter';
 
 
 export const API_ENDPOINTS = {
@@ -21,6 +23,7 @@ export const API_ENDPOINTS = {
         CREATE: `${_RESORT}`,
         OPTIONS_DATA: `${_RESORT}/options-data`,
         UPDATE: (id: string) => `${_RESORT}/${id}`,
+        UPDATE_METADATA: (id: string) => `${_RESORT}/${id}/metadata`,
         DELETE: (id: string) => `${_RESORT}/${id}`,
     },
 
@@ -43,11 +46,20 @@ export const API_ENDPOINTS = {
         UPSERT_IMAGE: (id: string) => `${_ASSET}/upsert-image/${id}`,
         REMOVE_IMAGE: (id: string) => `${_ASSET}/remove-image/${id}`,
         UPDATE: (id: string) => `${_ASSET}/${id}`,
+        UPDATE_METADATA: (id: string) => `${_ASSET}/${id}/metadata`,
         DELETE: (id: string) => `${_ASSET}/${id}`,
     },
 
     CALENDAR: {
         VIEW: `${_CALENDAR}/view`,
         DETAILS: `${_CALENDAR}/details`,
+    },
+
+    CONTACT_US: {
+        LIST: `${_CONTACT_US}/list`,
+    },
+
+    NEWSLETTER: {
+        LIST: `${_NEWSLETTER}/list`,
     },
 };

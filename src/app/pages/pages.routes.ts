@@ -7,6 +7,8 @@ import { CommonOutlet } from '../layouts/common-outlet/common-outlet';
 import { Resort } from './resort/resort';
 import { Property } from './property/property';
 import { Calendar } from './calendar/calendar';
+import { ContactUs } from './contact-us/contact-us';
+import { Newsletter } from './newsletter/newsletter';
 
 
 export const routes: Routes = [
@@ -35,5 +37,15 @@ export const routes: Routes = [
         path: ROUTES.CALENDAR,
         title: APP_PAGE_TITLE.CALENDAR,
         component: Calendar
-    }
+    },
+    {
+        path: ROUTES.CONTACT_US,
+        title: APP_PAGE_TITLE.CONTACT_US,
+        component: ContactUs
+    },
+    {
+        path: ROUTES.NEWSLETTER,
+        title: APP_PAGE_TITLE.NEWSLETTER,
+        component: Newsletter
+    },
 ];

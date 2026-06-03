@@ -44,16 +44,54 @@
                         <span class="text-muted">—</span>
                         }
                     </td>
-                    <td class="text-capitalize">{{ resort.title }}</td>
-                    <td class="text-muted small">{{ resort.address || '—' }}</td>
+                    <td class="text-capitalize">
+                        {{ resort.title }}
+                    </td>
+                    <td class="text-muted small">
+                        {{ resort.address || '—' }}
+                    </td>
                     <td>
-                        <div class="d-flex gap-3 align-items-center">
-                            <button class="btn btn-sm btn-outline-dark" (click)="onEditResort(resort)">
-                                Edit
+                        <div class="dropdown d-block text-center">
+                            <button type="button" data-bs-toggle="dropdown" aria-expanded="false" title="More options"
+                                class="btn btn-sm btn-outline-secondary rounded-circle border-0 outline-none shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
+                                    <path
+                                        d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+                                </svg>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger" (click)="onDeleteResort(resort)">
-                                Delete
-                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <button class="dropdown-item" type="button" (click)="onEditGallery(resort)">
+                                        Gallery
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item" type="button"
+                                        (click)="onEditFacilitiesAndStats(resort)">
+                                        Facilities &amp; Stats
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item" type="button" (click)="onEditMetadata(resort)">
+                                        Metadata
+                                    </button>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <button class="dropdown-item" type="button" (click)="onEditResort(resort)">
+                                        Edit
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item text-danger" type="button"
+                                        (click)="onDeleteResort(resort)">
+                                        Delete
+                                    </button>
+                                </li>
+                            </ul>
                         </div>
                     </td>
                 </tr>
@@ -75,6 +113,27 @@
 <app-modal-layer [appRegisterModalLayer]="upsertResortModalId" bgLayer="bg-gray-light">
     @if (_coreService.modal.isOpen(upsertResortModalId)) {
     <app-upsert-resort [data]="resortData" (upsert)="onUpsertResort($event)" />
+    }
+</app-modal-layer>
+
+<!-- Resort gallery modal -->
+<app-modal-layer [appRegisterModalLayer]="galleryModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(galleryModalId)) {
+    <app-upsert-gallery [data]="resortData" (upsert)="onGalleryUpsert($event)" />
+    }
+</app-modal-layer>
+
+<!-- Resort facilities & stats modal -->
+<app-modal-layer [appRegisterModalLayer]="facilitiesAndStatsModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(facilitiesAndStatsModalId)) {
+    <app-upsert-facilities-and-stats [data]="resortData" (upsert)="onFacilitiesAndStatsUpsert($event)" />
+    }
+</app-modal-layer>
+
+<!-- Resort metadata modal -->
+<app-modal-layer [appRegisterModalLayer]="metadataModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(metadataModalId)) {
+    <app-upsert-metadata [data]="resortData" (upsert)="onMetadataUpsert($event)" />
     }
 </app-modal-layer>
 

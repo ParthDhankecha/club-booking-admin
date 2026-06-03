@@ -3,6 +3,9 @@ import { Component, inject } from '@angular/core';
 import { ModalLayer } from '@src/app/shared/components/modal-layer/modal-layer';
 import { RegisterModalLayer } from '@src/app/shared/directives/register-modal-layer';
 import { UpsertResort } from './upsert-resort/upsert-resort';
+import { UpsertGallery } from './upsert-gallery/upsert-gallery';
+import { UpsertFacilitiesAndStats } from './upsert-facilities-and-stats/upsert-facilities-and-stats';
+import { UpsertMetadata } from './upsert-metadata/upsert-metadata';
 import { AppSrc } from '@src/app/shared/directives/src';
 
 import { IResponse } from '@src/app/models/http-response.model';
@@ -17,6 +20,9 @@ import { EToasterType } from '@src/app/models/utils.model';
     ModalLayer,
     RegisterModalLayer,
     UpsertResort,
+    UpsertGallery,
+    UpsertFacilitiesAndStats,
+    UpsertMetadata,
     AppSrc
   ],
   templateUrl: './resort.html',
@@ -27,12 +33,16 @@ export class Resort {
   protected readonly _coreService = inject(CoreFacadeService);
 
   protected readonly upsertResortModalId = 'upsert-resort-modal';
+  protected readonly galleryModalId = 'upsert-resort-gallery-modal';
+  protected readonly facilitiesAndStatsModalId = 'upsert-resort-facilities-stats-modal';
+  protected readonly metadataModalId = 'upsert-resort-metadata-modal';
   protected readonly deleteResortModalId = 'delete-resort-modal';
 
   protected resorts: any[] = [];
   protected isReqAlive = false;
   protected loading = false;
   protected resortData: any = null;
+
 
   ngOnInit(): void {
     this.loadList();
@@ -66,6 +76,60 @@ export class Resort {
   protected onEditResort(resort: any): void {
     this.resortData = resort;
     this._coreService.modal.open(this.upsertResortModalId);
+  }
+
+  protected onEditGallery(resort: any): void {
+    this.resortData = resort;
+    this._coreService.modal.open(this.galleryModalId);
+  }
+
+  protected onEditFacilitiesAndStats(resort: any): void {
+    this.resortData = resort;
+    this._coreService.modal.open(this.facilitiesAndStatsModalId);
+  }
+
+  protected onEditMetadata(resort: any): void {
+    this.resortData = resort;
+    this._coreService.modal.open(this.metadataModalId);
+  }
+
+  protected onGalleryUpsert(event: any): void {
+    if (event) {
+      const i = this.resorts.findIndex((c) => c._id === event._id);
+      if (i !== -1) {
+        this.resorts[i] = event;
+      } else {
+        this.loadList();
+      }
+    }
+    this.resortData = null;
+    this._coreService.modal.close(this.galleryModalId);
+  }
+
+  protected onFacilitiesAndStatsUpsert(event: any): void {
+    if (event) {
+      const i = this.resorts.findIndex((c) => c._id === event._id);
+      if (i !== -1) {
+        this.resorts[i] = event;
+      } else {
+        this.loadList();
+      }
+    }
+    this.resortData = null;
+    this._coreService.modal.close(this.facilitiesAndStatsModalId);
+  }
+
+  protected onMetadataUpsert(event: any): void {
+    if (event) {
+      const i = this.resorts.findIndex((c) => c._id === event._id);
+      if (i !== -1) {
+        this.resorts[i] = { ...this.resorts[i], metadata: event.metadata };
+      } else {
+        this.loadList();
+      }
+    }
+    this.resortData = null;
+    this._coreService.modal.close(this.metadataModalId);
   }
 
   protected onUpsertResort(event: any): void {
