@@ -1,12 +1,14 @@
-<div class="d-flex gap-2 justify-content-between">
-    <h4 class="mb-3">
+<div class="d-flex gap-2 align-items-center mb-3">
+    <h4 class="mb-0">
         Amenities
     </h4>
+    <button type="button" class="btn btn-sm ms-auto" (click)="goBack()">
+        ← Back
+    </button>
 </div>
 
 <div class="bg-white rounded-3 shadow p-3 pt-4">
     <div class="mb-3 border-bottom pb-2">
-        <!-- show asset details here -->
         <h2 class="mb-0 fw-semibold fs-6 text-center text-muted">
             <span class="text-capitalize fw-bold text-gray">
                 {{assetData?.title}}
@@ -24,35 +26,59 @@
     </div>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
-        <!-- Amenities -->
         @if(form.contains('amenities') && amenitiesKeys.length > 0) {
-        <div class="row mb-3" formGroupName="amenities">
-            @for (key of amenitiesKeys; track key;) {
-            <div class="col-md-6 col-lg-4 mb-3">
-                <span class="d-inline-block form-label mb-2 fw-semibold text-capitalize">
+        @if(form.contains('featuredAmenities')) {
+        <p class="amenities-hint text-muted small mb-3">
+            Check to enable. Mark up to {{MAX_FEATURED}} enabled amenities as featured with ★
+            <span class="fw-semibold">({{featuredCount}}/{{MAX_FEATURED}})</span>.
+        </p>
+        }
+
+        <div class="amenity-masonry mb-3" formGroupName="amenities">
+            @for (key of amenitiesKeys; track key) {
+            <div class="amenity-group">
+                <h6 class="amenity-group__title text-capitalize mb-0">
                     {{assetConfigs.amenitiesMap[key]}}
-                </span>
-                <div [formGroupName]="key" class="d-flex flex-wrap column-gap-3 row-gap-1">
-                    @for (amenity of assetConfigs.amenities[key]; track amenity;) {
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="amenity-{{key}}-{{amenity}}"
-                            [formControlName]="amenity">
-                        <label class="form-check-label text-capitalize" for="amenity-{{key}}-{{amenity}}">
-                            <img width="24" height="24" [appSrc]="assetConfigs?.iconsMap?.[amenity]"
-                                style="padding: 2px;" defaultSrc="images/placeholder.svg" alt="{{amenity}}"
-                                class="me-1 bg-secondary rounded">
+                </h6>
+                <div [formGroupName]="key" class="amenity-group__grid">
+                    @for (amenity of assetConfigs.amenities[key]; track amenity) {
+                    <div class="amenity-item">
+                        <div class="form-check amenity-item__check mb-0">
+                            <input class="form-check-input" type="checkbox" id="amenity-{{key}}-{{amenity}}"
+                                [formControlName]="amenity">
+                        </div>
+                        <img width="20" height="20" [appSrc]="iconMap.get(amenity)!" alt="{{amenity}}"
+                            class="amenity-item__icon">
+                        <label class="amenity-item__label text-capitalize mb-0" for="amenity-{{key}}-{{amenity}}"
+                            [title]="amenity">
                             {{amenity}}
                         </label>
+                        @if (enabledAmenities.has(amenity)) {
+                        <div class="form-check amenity-item__star mb-0">
+                            <input class="form-check-input" type="checkbox" id="featured-{{key}}-{{amenity}}"
+                                [checked]="featuredAmenities.has(amenity)"
+                                [disabled]="!featuredAmenities.has(amenity) && featuredCount >= MAX_FEATURED"
+                                (change)="toggleFeatured(amenity, $event)">
+                            <label class="form-check-label" for="featured-{{key}}-{{amenity}}"
+                                title="Featured">★</label>
+                        </div>
+                        }
                     </div>
                     }
                 </div>
             </div>
             }
         </div>
+
+        @if(form.get('featuredAmenities')?.touched && form.get('featuredAmenities')?.invalid) {
+        <div class="invalid-feedback d-block mb-3">
+            Select exactly {{MAX_FEATURED}} featured amenities, or leave all unfeatured.
+        </div>
+        }
         }
 
         <div class="d-flex gap-2 mt-3 mb-2">
-            <button class="btn btn-outline-primary mx-auto w-25">
+            <button type="submit" class="btn btn-outline-primary mx-auto w-25">
                 Save Changes
             </button>
         </div>

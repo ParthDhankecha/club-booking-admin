@@ -20,9 +20,9 @@
                                 placeholder="Select resort" [filterKeys]="['title']" displayKey1="title"
                                 [usedInModal]="true" (onSelect)="onResortChange($event)" />
 
-                            @if(f_resort?.touched && f_resort?.errors){
+                            @if(f_resort && f_resort.touched && f_resort.errors){
                             <div class="invalid-feedback d-block">
-                                @if(f_resort?.errors?.['required']){
+                                @if(f_resort.errors['required']){
                                 <span>
                                     Resort is required.
                                 </span>
@@ -40,9 +40,9 @@
                                 [filterKeys]="['title']" displayKey1="title" [usedInModal]="true"
                                 (onSelect)="onPropertyChange($event)" />
 
-                            @if(f_property?.touched && f_property?.errors){
+                            @if(f_property && f_property.touched && f_property.errors){
                             <div class="invalid-feedback d-block">
-                                @if(f_property?.errors?.['required']){
+                                @if(f_property.errors['required']){
                                 <span>
                                     Property is required.
                                 </span>
@@ -58,14 +58,14 @@
                             <input type="text" id="title" formControlName="title" class="form-control"
                                 placeholder="Enter title">
 
-                            @if(f_title?.touched && f_title?.errors){
+                            @if(f_title && f_title.touched && f_title.errors){
                             <div class="invalid-feedback d-block">
-                                @if(f_title?.errors?.['required']){
+                                @if(f_title.errors['required']){
                                 <span>
                                     Title is required.
                                 </span>
                                 }
-                                @if(f_title?.errors?.['pattern']){
+                                @if(f_title.errors['pattern']){
                                 <span>
                                     Only letters, numbers, spaces, and & / - , . ( ) are allowed (max 150 characters).
                                 </span>
@@ -74,28 +74,28 @@
                             }
                         </div>
                         <!-- Price -->
-                        <div class="col-xl-6 mb-3">
+                        <!-- <div class="col-xl-6 mb-3">
                             <label for="price" class="form-label">
                                 Price
                             </label>
                             <input type="number" id="price" formControlName="price" class="form-control number-input"
                                 placeholder="Enter price">
 
-                            @if(f_price?.touched && f_price?.errors){
+                            @if(f_price && f_price.touched && f_price.errors){
                             <div class="invalid-feedback d-block">
-                                @if(f_price?.errors?.['required']){
+                                @if(f_price.errors['required']){
                                 <span>
                                     Price is required.
                                 </span>
                                 }
-                                @if(f_price?.errors?.['min']){
+                                @if(f_price.errors['min']){
                                 <span>
                                     Price must be greater than 0.
                                 </span>
                                 }
                             </div>
                             }
-                        </div>
+                        </div> -->
                         <!-- Quantity -->
                         <div class="col-xl-6 mb-3">
                             <label for="quantity" class="form-label">
@@ -104,14 +104,14 @@
                             <input type="number" id="quantity" formControlName="quantity"
                                 class="form-control number-input" placeholder="Enter quantity">
 
-                            @if(f_quantity?.touched && f_quantity?.errors){
+                            @if(f_quantity && f_quantity.touched && f_quantity.errors){
                             <div class="invalid-feedback d-block">
-                                @if(f_quantity?.errors?.['required']){
+                                @if(f_quantity.errors['required']){
                                 <span>
                                     Quantity is required.
                                 </span>
                                 }
-                                @if(f_quantity?.errors?.['min']){
+                                @if(f_quantity.errors['min']){
                                 <span>
                                     Quantity must be greater than 0.
                                 </span>
@@ -127,17 +127,17 @@
                             <textarea id="description" formControlName="description" rows="5"
                                 class="form-control description-input" placeholder="Enter description"></textarea>
 
-                            @if(f_description?.touched && f_description?.errors){
+                            @if(f_description && f_description.touched && f_description.errors){
                             <div class="invalid-feedback d-block">
-                                @if(f_description?.errors?.['required']){
+                                @if(f_description.errors['required']){
                                 <span>
                                     Description is required.
                                 </span>
                                 }
-                                @if(f_description?.errors?.['maxlength']){
+                                @if(f_description.errors['maxlength']){
                                 <span>
                                     Description cannot exceed
-                                    {{f_description?.errors?.['maxlength']?.requiredLength}}
+                                    {{f_description.errors['maxlength']?.requiredLength}}
                                     characters.
                                 </span>
                                 }

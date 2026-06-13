@@ -32,6 +32,9 @@ export class UpsertFacilitiesAndStats {
   private readonly _coreService = inject(CoreFacadeService);
   private readonly _apiFs = inject(ApiFacadeService);
 
+  protected readonly getIconPath = this._coreService.icon.getFacilitiesStatsIconPath;
+  protected readonly iconMap: Map<string, string> = new Map();
+
 
   @Input('data') data: any = null;
   @Output('upsert') upsert: EventEmitter<any> = new EventEmitter<any>();
@@ -85,11 +88,19 @@ export class UpsertFacilitiesAndStats {
   private loadIcons(): void {
     if (this._apiFs.resort.iconsObj.size > 0) return;
 
-    this._apiFs.resort.optionsData({ iconsMap: 'iconsMap' }).subscribe({
+    this._apiFs.resort.optionsData({ icons: 'icons' }).subscribe({
       next: (res: IResponse) => {
-        if (res.code === 'OK' && res.data) {
-          this._apiFs.resort.iconsObj = res.data?.iconsMap ?? {};
+        if (res.code !== 'OK' || !res.data) return;
+
+        const icons = res.data?.icons;
+        if (!Array.isArray(icons)) return;
+
+        const iconsMap: Record<string, string> = {};
+        for (const name of icons) {
+          const key = name?.trim?.() ?? '';
+          if (key) iconsMap[key] = this.getIconPath(key);
         }
+        this._apiFs.resort.iconsObj = iconsMap;
       },
       error: (err: unknown) => {
         console.error('Error loading icons', err);
@@ -101,9 +112,8 @@ export class UpsertFacilitiesAndStats {
   protected iconDropdownSelection(iconKey: string | null | undefined): { key: string; value: string } | null {
     const k = (iconKey ?? '').trim();
     if (!k) return null;
-    const url = this._apiFs.resort.iconsObj.get(k);
-    if (url) return { key: k, value: url };
-    return { key: k, value: k };
+    const url = this._apiFs.resort.iconsObj.get(k) ?? this.getIconPath(k);
+    return { key: k, value: url };
   }
 
 

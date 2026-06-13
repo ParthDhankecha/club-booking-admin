@@ -2,6 +2,7 @@
   border: none;
   border-radius: 0.75rem;
   overflow: hidden;
+  min-height: calc(600px + 5vw);
 
   .resort-icon-thumb-well {
     display: flex;

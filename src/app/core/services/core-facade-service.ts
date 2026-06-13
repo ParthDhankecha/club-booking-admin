@@ -5,6 +5,7 @@ import { Utils } from './utils/utils';
 import { GoogleMap } from './google-map/google-map';
 import { Modal } from './modal/modal';
 import { FormBuilder } from './form-builder/form-builder';
+import { Icon } from './icon/icon';
 
 
 @Injectable({
@@ -21,4 +22,6 @@ export class CoreFacadeService {
   public readonly modal: Modal = inject(Modal);
   // Inject form builder service
   public readonly formBuilder = inject(FormBuilder);
+  // Inject icon service
+  public readonly icon: Icon = inject(Icon);
 }
