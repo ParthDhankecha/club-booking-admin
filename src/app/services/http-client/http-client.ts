@@ -8,7 +8,7 @@ import { catchError, Observable, throwError } from 'rxjs';
 })
 export class HttpClient {
   private readonly _http = inject(_HttpClient);
-  private readonly baseUrl = 'http://89.116.134.45:3000/api/club/admin';
+  private readonly baseUrl = 'https://sahyadriresort.com/api/club/admin';
 
 
 
