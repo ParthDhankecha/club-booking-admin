@@ -1,12 +1,14 @@
-<div class="d-flex gap-2 justify-content-between">
-    <h4 class="mb-3">
+<div class="d-flex gap-2 align-items-center mb-3">
+    <h4 class="mb-0">
         Images
     </h4>
+    <button type="button" class="btn btn-sm ms-auto" (click)="goBack()">
+        ← Back
+    </button>
 </div>
 
 <div class="bg-white rounded-3 shadow p-3 pt-4">
     <div class="mb-3 border-bottom pb-2">
-        <!-- show asset details here -->
         <h2 class="mb-0 fw-semibold fs-6 text-center text-muted">
             <span class="text-capitalize fw-bold text-gray">
                 {{assetData?.title}}

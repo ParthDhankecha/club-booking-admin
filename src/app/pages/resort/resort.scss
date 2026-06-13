@@ -1,0 +1,11 @@
+.card-table {
+    min-height: calc(100vh - 5rem);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .table-responsive {
+        min-height: 100%;
+        flex-grow: 1;
+    }
+}

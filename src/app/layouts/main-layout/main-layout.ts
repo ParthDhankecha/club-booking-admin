@@ -27,7 +27,7 @@ export class MainLayout {
     {
       label: 'Property Types',
       link: ROUTES.PROPERTY,
-      icon: 'boxes'
+      icon: 'list'
     },
     {
       label: 'Assets',
@@ -35,19 +35,19 @@ export class MainLayout {
       icon: 'property'
     },
     {
-      label: 'Booking Calendar',
+      label: 'Bookings',
       link: ROUTES.CALENDAR,
       icon: 'calendar'
     },
     {
       label: 'Contact Us',
       link: ROUTES.CONTACT_US,
-      icon: 'list'
+      icon: 'contact-us'
     },
     {
       label: 'Newsletter',
       link: ROUTES.NEWSLETTER,
-      icon: 'list'
+      icon: 'newsletter'
     },
   ];
 

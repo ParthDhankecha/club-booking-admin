@@ -44,6 +44,7 @@ export class Resort {
   protected resortData: any = null;
 
 
+
   ngOnInit(): void {
     this.loadList();
   }

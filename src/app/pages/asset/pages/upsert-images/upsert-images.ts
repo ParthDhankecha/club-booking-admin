@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray, CdkDragHandle } from '@angular/cdk/drag-drop';
 
 import { ModalLayer } from '@src/app/shared/components/modal-layer/modal-layer';
@@ -10,6 +10,7 @@ import { AppSrc } from '@src/app/shared/directives/src';
 import { CoreFacadeService } from '@src/app/core/services/core-facade-service';
 import { ApiFacadeService } from '@src/app/services/api-facade-service';
 import { EToasterType } from '@src/app/models/utils.model';
+import { ROUTES } from '@src/app/constants/app-routes';
 
 
 @Component({
@@ -31,6 +32,7 @@ export class UpsertImages {
   protected _fb: FormBuilder = inject(FormBuilder);
   protected _coreService: CoreFacadeService = inject(CoreFacadeService);
   protected _apiFs: ApiFacadeService = inject(ApiFacadeService);
+  private readonly _router: Router = inject(Router);
 
   constructor(
     private readonly _route: ActivatedRoute,
@@ -52,6 +54,10 @@ export class UpsertImages {
   protected deleteImageModalId: string = 'delete-image-modal';
   protected imageData: any = null;
 
+
+  protected goBack(): void {
+    this._router.navigate([ROUTES.getFullRoute(ROUTES.ASSET.BASE)]);
+  }
 
 
   protected get f_images(): FormArray {
