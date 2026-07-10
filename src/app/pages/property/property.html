@@ -36,7 +36,6 @@
                     <th>Title</th>
                     <th>Description</th>
                     <th>Status</th>
-                    <th>Created At</th>
                     <th>Updated At</th>
                     <th class="text-center w-1-percent">
                         Actions
@@ -47,17 +46,18 @@
                 @for (property of filteredProperties; track property._id; let i = $index;) {
                 <tr>
                     <td>{{ i + 1 }}</td>
-                    <td class="text-capitalize">{{ property.title }}</td>
-                    <td>{{ property.description || '-' }}</td>
+                    <td class="text-capitalize">
+                        {{ property.title }}
+                    </td>
+                    <td>
+                        {{ property.description || '-' }}
+                    </td>
                     <td>
                         <span class="badge rounded-pill cursor-pointer"
                             [class]="property.isPublished ? 'bg-success' : 'bg-danger'"
                             (click)="onChangePropertyStatus(property)">
                             {{ property.isPublished ? 'Published' : 'Unpublished' }}
                         </span>
-                    </td>
-                    <td class="text-muted">
-                        {{ property.createdAt | date:'yyyy-MM-dd' }}
                     </td>
                     <td class="text-muted">
                         {{ property.updatedAt | date:'yyyy-MM-dd' }}
@@ -75,7 +75,7 @@
                 </tr>
                 }@empty{
                 <tr>
-                    <td colspan="7" class="text-center">
+                    <td colspan="6" class="text-center">
                         No properties found
                     </td>
                 </tr>

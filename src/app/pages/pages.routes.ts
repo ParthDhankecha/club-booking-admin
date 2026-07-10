@@ -9,6 +9,7 @@ import { Property } from './property/property';
 import { Calendar } from './calendar/calendar';
 import { ContactUs } from './contact-us/contact-us';
 import { Newsletter } from './newsletter/newsletter';
+import { CancelledOrdersToRefund } from './cancelled-orders-to-refund/cancelled-orders-to-refund';
 
 
 export const routes: Routes = [
@@ -47,5 +48,10 @@ export const routes: Routes = [
         path: ROUTES.NEWSLETTER,
         title: APP_PAGE_TITLE.NEWSLETTER,
         component: Newsletter
+    },
+    {
+        path: ROUTES.CANCELLED_ORDERS,
+        title: APP_PAGE_TITLE.CANCELLED_ORDERS,
+        component: CancelledOrdersToRefund
     },
 ];

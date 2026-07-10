@@ -40,6 +40,11 @@ export class MainLayout {
       icon: 'calendar'
     },
     {
+      label: 'Cancelled Orders',
+      link: ROUTES.CANCELLED_ORDERS,
+      icon: 'cancelled-orders'
+    },
+    {
       label: 'Contact Us',
       link: ROUTES.CONTACT_US,
       icon: 'contact-us'

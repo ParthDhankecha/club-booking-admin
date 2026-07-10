@@ -15,6 +15,7 @@ export const ROUTES = {
     CALENDAR: 'calendar',
     CONTACT_US: 'contact-us',
     NEWSLETTER: 'newsletter',
+    CANCELLED_ORDERS: 'cancelled-orders',
     TERMS_AND_CONDITIONS: 'terms-and-condition',
     PRIVACY_POLICY: 'privacy-policy',
     SUPPORT: 'support',

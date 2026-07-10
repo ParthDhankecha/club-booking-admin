@@ -45,19 +45,23 @@
                     <th>#</th>
                     <th>Title</th>
                     <th>Description</th>
-                    <th>Price</th>
                     <th>Quantity</th>
                     <th>Property</th>
                     <th>Status</th>
-                    <th class="text-nowrap">Created At</th>
-                    <th class="text-nowrap">Updated At</th>
-                    <th class="text-center w-1-percent">Actions</th>
+                    <th class="text-nowrap">
+                        Updated At
+                    </th>
+                    <th class="text-center w-1-percent">
+                        Actions
+                    </th>
                 </tr>
             </thead>
             <tbody>
                 @for (asset of assets; track asset._id; let i = $index;) {
                 <tr>
-                    <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+                    <td>
+                        {{ (currentPage - 1) * pageSize + i + 1 }}
+                    </td>
                     <td class="text-capitalize">
                         {{ asset.title }}
                     </td>
@@ -66,10 +70,7 @@
                             {{ asset.description || '-' }}
                         </p>
                     </td>
-                    <td>
-                        {{ asset.price }}
-                    </td>
-                    <td>
+                    <td class="text-center">
                         {{ asset.quantity }}
                     </td>
                     <td class="text-capitalize">
@@ -81,8 +82,6 @@
                             (click)="onChangeAssetStatus(asset)">
                             {{ asset.isPublished ? 'Published' : 'Unpublished' }}
                         </span>
-                    <td class="text-muted">
-                        {{ asset.createdAt | date:'yyyy-MM-dd' }}
                     </td>
                     <td class="text-muted">
                         {{ asset.updatedAt | date:'yyyy-MM-dd' }}
@@ -133,7 +132,7 @@
                 </tr>
                 }@empty{
                 <tr>
-                    <td colspan="10" class="text-center">
+                    <td colspan="8" class="text-center">
                         No assets found
                     </td>
                 </tr>
@@ -141,6 +140,7 @@
             </tbody>
         </table>
     </div>
+    <!-- Pagination -->
     <app-pagination [totalPages]="totalPages" [totalEntries]="totalEntries" [currentPage]="currentPage"
         [pageSize]="pageSize" (pageChange)="onPageChange($event)" />
     }

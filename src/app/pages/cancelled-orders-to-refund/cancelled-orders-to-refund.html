@@ -1,0 +1,453 @@
+<div class="d-flex gap-2 justify-content-between">
+    <h4 class="mb-3">
+        Cancelled Orders to Refund
+    </h4>
+</div>
+
+<div class="bg-white rounded-3 shadow p-2 pt-3">
+    <div class="mb-3 d-flex gap-3 justify-content-between align-items-center flex-wrap toolbar">
+        <ul class="nav nav-tabs mb-0">
+            @for (tab of refundTabs; track tab.key) {
+            <li class="nav-item">
+                <button type="button" class="nav-link" [class.active]="activeTab === tab.key"
+                    (click)="onTabChange(tab.key)">
+                    {{ tab.label }}
+                </button>
+            </li>
+            }
+        </ul>
+
+        <div class="d-flex gap-2 align-items-center flex-wrap filters-bar">
+            <input type="text" class="form-control w-auto mw-100" placeholder="Search order no"
+                [(ngModel)]="filters.orderNo" />
+            <input type="text" class="form-control w-auto mw-100" placeholder="Search email"
+                [(ngModel)]="filters.email" />
+
+            <button class="btn btn-sm btn-outline-primary" (click)="onSearch()">
+                Search
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="onClearFilters()">
+                Clear
+            </button>
+        </div>
+    </div>
+
+    @if(loading){
+    <div class="text-center">
+        <div class="spinner-border text-primary"></div>
+    </div>
+    }
+
+    @if(!loading){
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>#Ord</th>
+                    <th>Ordered At</th>
+                    <th>Customer</th>
+                    <th>Cancelled Stay</th>
+                    <th>Credits Used</th>
+                    @if (activeTab === 'all') {
+                    <th>Refund</th>
+                    }
+                    <th class="text-center w-1-percent">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (order of orderList; track order._id; let i = $index;) {
+                <tr>
+                    <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+                    <td>#{{ order.orderNo ?? '-' }}</td>
+                    <td class="text-muted text-nowrap">
+                        {{ order.orderDate ? (order.orderDate | date:'yyyy-MM-dd HH:mm') : '-' }}
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column lh-sm small">
+                            <span>
+                                <span class="text-muted">N:</span>
+                                <span class="fw-medium text-capitalize">
+                                    {{ order.user?.fullname || '-' }}
+                                </span>
+                            </span>
+                            @if (order.user?.email) {
+                            <span class="text-nowrap">
+                                <span class="text-muted">E:</span>
+                                {{ order.user.email }}
+                            </span>
+                            }
+                            @if (order.user?.mobile) {
+                            <span class="text-nowrap">
+                                <span class="text-muted">M:</span>
+                                {{ order.user.mobile }}
+                            </span>
+                            }
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        {{order.cancelledStay}}
+                    </td>
+                    <td class="text-nowrap">
+                        {{ formatCredits(order.creditsUsed) }}
+                    </td>
+                    @if (activeTab === 'all') {
+                    <td>
+                        @switch (order.status) {
+                        @case ('refunded') {
+                        <span class="refund-pill refund-pill-done">
+                            <span class="refund-dot"></span>
+                            Done
+                        </span>
+                        }
+                        @case ('partial') {
+                        <span class="refund-pill">
+                            <span class="refund-dot"></span>
+                            Partial
+                        </span>
+                        }
+                        @default {
+                        <span class="refund-pill">
+                            <span class="refund-dot"></span>
+                            Pending
+                        </span>
+                        }
+                        }
+                    </td>
+                    }
+                    <td>
+                        <button type="button" class="btn btn-outline-dark btn-sm" (click)="openViewOrder(order)">
+                            View
+                        </button>
+                    </td>
+                </tr>
+                }@empty{
+                <tr>
+                    <td [attr.colspan]="activeTab === 'all' ? 8 : 7" class="text-center">
+                        No cancelled orders found
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <app-pagination [totalPages]="totalPages" [totalEntries]="totalEntries" [currentPage]="currentPage"
+        [pageSize]="pageSize" (pageChange)="onPageChange($event)" />
+    }
+</div>
+
+
+<!-- view order modal -->
+<app-modal-layer [appRegisterModalLayer]="viewOrderModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(viewOrderModalId) && selectedOrder) {
+    <div class="modal d-block">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+            <div class="modal-content order-view-modal">
+                <div class="modal-header order-view-header">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h6 class="modal-title mb-0">
+                            Order #{{ selectedOrder?.orderNo }}
+                        </h6>
+                        @switch (selectedOrder.status) {
+                        @case ('refunded') {
+                        <span class="badge text-bg-success">
+                            Refunded
+                        </span>
+                        }
+                        @case ('partial') {
+                        <span class="badge text-bg-info">
+                            Partially Refunded
+                        </span>
+                        }
+                        @default {
+                        <span class="badge text-bg-warning">
+                            Refund Pending
+                        </span>
+                        }
+                        }
+                    </div>
+                    <button type="button" class="btn-close" (click)="closeViewOrder()" aria-label="Close"></button>
+                </div>
+
+                @if (selectedOrder.user) {
+                <div class="order-summary-strip border-bottom">
+                    <h2 class="order-summary-title">
+                        Customer:
+                    </h2>
+                    <div class="summary-group">
+                        <span class="summary-label">
+                            Name
+                        </span>
+                        <span class="summary-value text-capitalize">
+                            {{ selectedOrder.user?.fullname ?? '-' }}
+                        </span>
+                    </div>
+                    <div class="summary-group">
+                        <span class="summary-label">
+                            Email
+                        </span>
+                        <span class="summary-value">
+                            <a [href]="'mailto:' + selectedOrder.user?.email">
+                                {{ selectedOrder.user?.email ?? '-' }}
+                            </a>
+                        </span>
+                    </div>
+                    <div class="summary-group">
+                        <span class="summary-label">
+                            Mobile
+                        </span>
+                        <span class="summary-value">
+                            <a [href]="'tel:' + selectedOrder.user?.mobile">
+                                {{ selectedOrder.user?.mobile ?? '-' }}
+                            </a>
+                        </span>
+                    </div>
+                    <div class="summary-group">
+                        <span class="summary-label">
+                            Address
+                        </span>
+                        <span class="summary-value">
+                            {{ selectedOrder.user?.address ?? '-' }}
+                        </span>
+                    </div>
+                </div>
+                }
+
+                <div class="modal-body order-view-body">
+                    <div class="line-items-panel">
+                        <div class="line-items-panel-head">
+                            <h6 class="line-items-title mb-0">
+                                Cancelled Stays
+                            </h6>
+                            <span class="line-items-count">
+                                {{ `${selectedOrder.lineItems.length} item(s)` }}
+                            </span>
+                        </div>
+
+                        <div class="line-items-table-wrap">
+                            <table class="line-items-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th class="col-asset">Asset</th>
+                                        <th class="col-stay">Stay</th>
+                                        <th class="col-guests">Guests</th>
+                                        <th class="col-units text-center">Units</th>
+                                        <th class="col-credits text-end">Credits</th>
+                                        <th class="col-refund text-center">Refund</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (item of selectedOrder.lineItems; track item._id; let i = $index) {
+                                    <tr class="line-item-row">
+                                        <td>{{ i + 1 }}</td>
+                                        <td class="col-asset">
+                                            <span class="line-item-name text-capitalize">
+                                                {{ item.assetTitle }}
+                                            </span>
+                                        </td>
+                                        <td class="col-stay">
+                                            @if (item.startDate && item.endDate) {
+                                            <span class="stay-pill">
+                                                {{ item.startDate | date:'MMM d' }} – {{ item.endDate | date:'MMM d' }}
+                                            </span>
+                                            } @else {
+                                            <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                        <td class="col-guests">
+                                            <div class="guest-block">
+                                                <div class="guest-counts">
+                                                    <span class="guest-chip">
+                                                        {{ item.adults ?? 0 }}
+                                                        adult{{ (item.adults ?? 0) === 1 ? '' : 's' }}
+                                                    </span>
+                                                    @if (item.kidsLabel !== '-') {
+                                                    <span class="guest-chip guest-chip-muted">
+                                                        {{ item.kidsLabel }}
+                                                    </span>
+                                                    }
+                                                </div>
+                                                @if (item.guestDetails?.guestName) {
+                                                <div class="guest-name text-capitalize">
+                                                    {{ item.guestDetails.guestName }}
+                                                </div>
+                                                }
+                                                @if (item.hasGuestContact) {
+                                                <div class="guest-contact">
+                                                    @if (item.guestDetails.email) {
+                                                    <a class="guest-contact-link"
+                                                        [href]="'mailto:' + item.guestDetails.email">
+                                                        {{ item.guestDetails.email }}
+                                                    </a>
+                                                    }
+                                                    @if (item.guestDetails.email && item.guestDetails.phone) {
+                                                    <span class="guest-contact-sep">·</span>
+                                                    }
+                                                    @if (item.guestDetails.phone) {
+                                                    <a class="guest-contact-link"
+                                                        [href]="'tel:' + item.guestDetails.phone">
+                                                        {{ item.guestDetails.phone }}
+                                                    </a>
+                                                    }
+                                                    @if (item.guestDetails.address) {
+                                                    <div class="guest-address text-truncate">
+                                                        {{ item.guestDetails.address }}
+                                                    </div>
+                                                    }
+                                                </div>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td class="col-units text-center">
+                                            <span class="units-value">
+                                                {{ item.units ?? '—' }}
+                                            </span>
+                                        </td>
+                                        <td class="col-credits text-end">
+                                            <span class="credits-value">
+                                                {{ formatCredits(item.creditsUsed) }}
+                                            </span>
+                                        </td>
+                                        <td class="col-refund text-center">
+                                            @if (item.refundInfo) {
+                                            <span class="refund-pill refund-pill-done">
+                                                <span class="refund-dot"></span>
+                                                Done
+                                            </span>
+                                            } @else {
+                                            <span class="refund-pill">
+                                                <span class="refund-dot"></span>
+                                                Pending
+                                            </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                    } @empty {
+                                    <tr>
+                                        <td colspan="7" class="line-items-empty">
+                                            No line items found
+                                        </td>
+                                    </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-summary-strip border-top">
+                    <h2 class="order-summary-title">
+                        Order Summary:
+                    </h2>
+                    <div class="summary-group">
+                        <span class="summary-label">
+                            Ordered At
+                        </span>
+                        <span class="summary-value">
+                            {{ selectedOrder.orderDate | date:'yyyy-MM-dd HH:mm' }}
+                        </span>
+                    </div>
+                    <div class="summary-group">
+                        <span class="summary-label">
+                            Credits Used
+                        </span>
+                        <span class="summary-value fw-semibold text-success">
+                            {{ formatCredits(selectedOrder.creditsUsed) }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="modal-footer order-view-footer">
+                    @if (hasPendingRefunds(selectedOrder)) {
+                    <button type="button" class="btn btn-sm btn-danger bg-opacity-75 me-auto"
+                        (click)="openRefundConfirmForAllPending()">
+                        Refund All Pending ({{ getPendingLineItems(selectedOrder).length }})
+                    </button>
+                    }
+                    <button type="button" class="btn btn-sm btn-secondary" (click)="closeViewOrder()">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</app-modal-layer>
+
+
+<!-- refund confirmation modal -->
+<app-modal-layer [appRegisterModalLayer]="refundConfirmModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(refundConfirmModalId) && refundTarget) {
+    <div class="modal d-block">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg refund-confirm-modal">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">
+                        Confirm Credits Refund
+                    </h1>
+                    <button type="button" class="btn-close" (click)="closeRefundConfirm()"
+                        [disabled]="isRefunding"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">
+                        Are you sure you want to refund credits for the following cancelled stay(s) in
+                        <span class="fw-semibold">Order #{{ refundTarget.orderNo }}</span>?
+                    </p>
+                    <ul class="refund-confirm-list mb-3">
+                        @for (item of refundTarget.lineItems; track item._id) {
+                        <li class="refund-confirm-item">
+                            <span class="refund-confirm-asset text-capitalize">
+                                {{ item.assetTitle }}
+                            </span>
+                            <span class="refund-confirm-amount">
+                                {{ formatCredits(item.creditsUsed) }}
+                            </span>
+                        </li>
+                        }
+                    </ul>
+                    <div class="refund-confirm-total">
+                        <div class="refund-confirm-total-info">
+                            <span class="refund-confirm-total-label">
+                                Suggested refund credits
+                            </span>
+                            <span class="refund-confirm-total-suggested">
+                                {{ formatCredits(refundTarget.totalCredits) }}
+                            </span>
+                        </div>
+                        <div class="refund-confirm-amount-input">
+                            <label class="form-label mb-1" for="refund-credits-input">
+                                Refund credits
+                            </label>
+                            <input type="number" id="refund-credits-input" class="form-control" min="1" step="1"
+                                [(ngModel)]="refundTarget.refundCredits" [disabled]="isRefunding"
+                                [class.is-invalid]="refundTarget.refundCredits < 1" />
+                        </div>
+                        @if (1 > refundTarget.refundCredits) {
+                        <span class="invalid-feedback d-block">
+                            Refund credits must be greater than 0
+                        </span>
+                        }
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary me-2" (click)="closeRefundConfirm()"
+                        [disabled]="isRefunding">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" (click)="confirmRefund()"
+                        [disabled]="isRefunding || !canConfirmRefund()">
+                        @if (isRefunding) {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                        }
+                        Confirm Refund
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</app-modal-layer>

@@ -6,6 +6,7 @@ const _ASSET = '/asset';
 const _CALENDAR = '/calendar';
 const _CONTACT_US = '/contact-us';
 const _NEWSLETTER = '/newsletter';
+const _ORDER = '/order';
 
 
 export const API_ENDPOINTS = {
@@ -61,5 +62,10 @@ export const API_ENDPOINTS = {
 
     NEWSLETTER: {
         LIST: `${_NEWSLETTER}/list`,
+    },
+
+    ORDER: {
+        CANCELLED_TO_REFUND_LIST: `${_ORDER}/list`,
+        REFUND: `${_ORDER}/refund`,
     },
 };
