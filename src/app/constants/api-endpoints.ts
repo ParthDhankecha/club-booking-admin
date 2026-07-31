@@ -4,6 +4,7 @@ const _RESORT = '/resort';
 const _PROPERTY = '/property';
 const _ASSET = '/asset';
 const _CALENDAR = '/calendar';
+const _BLACKOUT_DATE = '/blackout-date';
 const _CONTACT_US = '/contact-us';
 const _NEWSLETTER = '/newsletter';
 const _ORDER = '/order';
@@ -25,6 +26,7 @@ export const API_ENDPOINTS = {
         OPTIONS_DATA: `${_RESORT}/options-data`,
         UPDATE: (id: string) => `${_RESORT}/${id}`,
         UPDATE_METADATA: (id: string) => `${_RESORT}/${id}/metadata`,
+        CHANGE_STATUS: (id: string) => `${_RESORT}/change-status/${id}`,
         DELETE: (id: string) => `${_RESORT}/${id}`,
     },
 
@@ -56,6 +58,13 @@ export const API_ENDPOINTS = {
         DETAILS: `${_CALENDAR}/details`,
     },
 
+    BLACKOUT_DATE: {
+        CREATE: `${_BLACKOUT_DATE}`,
+        LIST: `${_BLACKOUT_DATE}/list`,
+        UPDATE: (id: string) => `${_BLACKOUT_DATE}/${id}`,
+        DELETE: (id: string) => `${_BLACKOUT_DATE}/${id}`,
+    },
+
     CONTACT_US: {
         LIST: `${_CONTACT_US}/list`,
     },
@@ -67,5 +76,30 @@ export const API_ENDPOINTS = {
     ORDER: {
         CANCELLED_TO_REFUND_LIST: `${_ORDER}/list`,
         REFUND: `${_ORDER}/refund`,
+    },
+};
+
+
+// Super Admin API Endpoints
+const _WORKSPACE = '/workspace';
+const _ADMIN_USER = '/admin-user';
+
+export const API_ENDPOINTS_SUPER_ADMIN = {
+    AUTH: {
+        LOGIN: `${_AUTH}/login`,
+    },
+
+    WORKSPACE: {
+        LIST: `${_WORKSPACE}/list`,
+        CREATE: `${_WORKSPACE}`,
+        UPDATE: (id: string) => `${_WORKSPACE}/${id}`,
+        DELETE: (id: string) => `${_WORKSPACE}/${id}`,
+    },
+
+    ADMIN_USER: {
+        LIST: `${_ADMIN_USER}/list`,
+        CREATE: `${_ADMIN_USER}`,
+        UPDATE: (id: string) => `${_ADMIN_USER}/${id}`,
+        DELETE: (id: string) => `${_ADMIN_USER}/${id}`,
     },
 };

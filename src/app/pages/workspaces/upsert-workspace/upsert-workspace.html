@@ -1,0 +1,50 @@
+<div class="modal d-block">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content shadow-lg" [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">
+                    {{ isEditMode ? 'Edit' : 'Create' }} Workspace
+                </h1>
+                <button type="button" class="btn-close" (click)="onCloseOrCancel()"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="title" class="form-label">
+                        Title <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" id="title" formControlName="title" class="form-control"
+                        placeholder="Enter workspace title">
+
+                    @if (f_title && f_title.touched && f_title.errors) {
+                    <div class="invalid-feedback d-block">
+                        @if (f_title.errors['required']) {
+                        <span>Title is required.</span>
+                        }
+                        @if (f_title.errors['maxlength']) {
+                        <span>Title cannot exceed
+                            {{ f_title.errors['maxlength'].requiredLength }} characters.
+                        </span>
+                        }
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary me-3" (click)="onCloseOrCancel()">
+                    Cancel
+                </button>
+                <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                    [class.disabled]="isReqAlive" [disabled]="isReqAlive">
+                    @if (!isReqAlive) {
+                    <span>{{ isEditMode ? 'Save Changes' : 'Create New' }}</span>
+                    } @else {
+                    <span class="spinner-border spinner-border-sm"></span>
+                    <span role="status">&nbsp; Please wait...</span>
+                    }
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

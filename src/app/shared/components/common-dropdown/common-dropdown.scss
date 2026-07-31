@@ -7,7 +7,7 @@
 }
 
 .option-item {
-    @include app-ellipses(1);
+    @include app-ellipses(2);
     white-space: normal;
     cursor: pointer;
 }

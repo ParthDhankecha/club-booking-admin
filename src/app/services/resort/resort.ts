@@ -38,6 +38,10 @@ export class Resort {
     return this._http.patch(this._ENDPOINTS.UPDATE_METADATA(id), body, { multipart: true });
   }
 
+  changeStatus(id: string, body: { isPublished: boolean }): Observable<IResponse> {
+    return this._http.patch(this._ENDPOINTS.CHANGE_STATUS(id), body);
+  }
+
   delete(id: string): Observable<IResponse> {
     return this._http.delete(this._ENDPOINTS.DELETE(id));
   }

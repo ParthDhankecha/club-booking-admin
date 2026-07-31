@@ -1,0 +1,70 @@
+<div class="modal d-block">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">
+                    {{ isEditing ? 'Edit Blackout Date' : 'Add Blackout Date' }}
+                </h1>
+                <button type="button" class="btn-close" (click)="closeUpsert()"></button>
+            </div>
+            <form class="modal-body" [formGroup]="upsertForm" (ngSubmit)="submitUpsert()">
+                <div class="mb-3">
+                    <label class="form-label">
+                        Asset <span class="text-danger">*</span>
+                    </label>
+                    <app-common-dropdown [selectedOption]="upsertForm.value.asset" [optionsList]="assetList"
+                        placeholder="Select asset" [filterKeys]="['title','propertyTitle']" displayKey1="title"
+                        displayKey2="propertyTitle" (onSelect)="ff_asset.setValue($event)" />
+
+                    @if(ff_asset.touched && ff_asset.errors?.['required']){
+                    <small class="text-danger">
+                        Asset is required.
+                    </small>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label for="startDate" class="form-label">
+                        Start Date <span class="text-danger">*</span>
+                    </label>
+                    <input id="startDate" type="date" class="form-control" formControlName="startDate" />
+
+                    @if(ff_startDate.touched && ff_startDate.errors?.['required']){
+                    <small class="text-danger">
+                        Start Date is required.
+                    </small>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input id="endDate" type="date" class="form-control" formControlName="endDate" />
+
+                    @if(ff_endDate.touched && ff_endDate.errors?.['invalidRange']){
+                    <small class="text-danger">
+                        Please select valid date range
+                    </small>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label for="reason" class="form-label">Reason (optional)</label>
+                    <textarea id="reason" class="form-control" rows="3" formControlName="reason"></textarea>
+
+                    @if(ff_reason.touched && ff_reason.errors){
+                    <small class="text-danger">
+                        Allow only
+                        {{ff_reason.errors['maxlength']?.requiredLength}}
+                        characters to describe reason.
+                    </small>
+                    }
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary me-3" (click)="closeUpsert()">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" [disabled]="isReqAlive" (click)="submitUpsert()">
+                    {{ isEditing ? 'Save' : 'Create' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

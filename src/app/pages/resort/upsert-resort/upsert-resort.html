@@ -15,15 +15,15 @@
                         Resort name <span class="text-danger">*</span>
                     </label>
                     <input type="text" id="title" formControlName="title" class="form-control" placeholder="Name">
-                    @if(f_title?.touched && f_title?.errors){
+
+                    @if(f_title && f_title.touched && f_title.errors){
                     <div class="invalid-feedback d-block">
-                        @if(f_title?.errors?.['required']){
+                        @if(f_title.errors['required']){
                         <span>Resort name is required.</span>
                         }
-                        @if(f_title?.errors?.['maxlength']){
-                        <span>
-                            Resort name cannot exceed {{f_title?.errors?.['maxlength']?.requiredLength}} characters.
-                        </span>
+                        @if(f_title.errors['maxlength']){
+                        <span>Resort name cannot exceed {{f_title.errors['maxlength'].requiredLength}}
+                            characters.</span>
                         }
                     </div>
                     }
@@ -39,17 +39,18 @@
                         <input type="text" id="phone" formControlName="phone" class="form-control"
                             placeholder="Phone number">
 
-                        @if(f_phone?.touched && f_phone?.errors){
+                        @if(f_phone && f_phone.touched && f_phone.errors){
                         <div class="invalid-feedback d-block">
-                            @if(f_phone?.errors?.['required']){ <span>Phone is required.</span> }
-                            @if(f_phone?.errors?.['maxlength']){
-                            <span>
-                                Phone cannot exceed {{f_phone?.errors?.['maxlength']?.requiredLength}} characters.
-                            </span>
+                            @if(f_phone.errors['required']){
+                            <span>Phone is required.</span>
+                            }
+                            @if(f_phone.errors['maxlength']){
+                            <span>Phone cannot exceed {{f_phone.errors['maxlength'].requiredLength}} characters.</span>
                             }
                         </div>
                         }
                     </div>
+
                     <!-- Email -->
                     <div class="col-md-6 mb-3">
                         <label for="email" class="form-label">
@@ -58,14 +59,16 @@
                         <input type="email" id="email" formControlName="email" class="form-control"
                             placeholder="Email address">
 
-                        @if(f_email?.touched && f_email?.errors){
+                        @if(f_email && f_email.touched && f_email.errors){
                         <div class="invalid-feedback d-block">
-                            @if(f_email?.errors?.['required']){ <span>Email is required.</span> }
-                            @if(f_email?.errors?.['email']){ <span>Please enter a valid email address.</span> }
-                            @if(f_email?.errors?.['maxlength']){
-                            <span>
-                                Email cannot exceed {{f_email?.errors?.['maxlength']?.requiredLength}} characters.
-                            </span>
+                            @if(f_email.errors['required']){
+                            <span>Email is required.</span>
+                            }
+                            @if(f_email.errors['email']){
+                            <span>Please enter a valid email address.</span>
+                            }
+                            @if(f_email.errors['maxlength']){
+                            <span>Email cannot exceed {{f_email.errors['maxlength'].requiredLength}} characters.</span>
                             }
                         </div>
                         }
@@ -79,14 +82,15 @@
                     </label>
                     <textarea id="destination" formControlName="destination" class="form-control" rows="2"
                         placeholder="Destination"></textarea>
-                    @if(f_destination?.touched && f_destination?.errors){
+
+                    @if(f_destination && f_destination.touched && f_destination.errors){
                     <div class="invalid-feedback d-block">
-                        @if(f_destination?.errors?.['required']){ <span>Destination is required.</span> }
-                        @if(f_destination?.errors?.['maxlength']){
-                        <span>
-                            Destination cannot exceed {{f_destination?.errors?.['maxlength']?.requiredLength}}
-                            characters.
-                        </span>
+                        @if(f_destination.errors['required']){
+                        <span>Destination is required.</span>
+                        }
+                        @if(f_destination.errors['maxlength']){
+                        <span>Destination cannot exceed {{f_destination.errors['maxlength'].requiredLength}}
+                            characters.</span>
                         }
                     </div>
                     }
@@ -99,9 +103,12 @@
                     </label>
                     <textarea id="description" formControlName="description" class="form-control" rows="3"
                         placeholder="Description"></textarea>
-                    @if(f_description?.touched && f_description?.errors){
+
+                    @if(f_description && f_description.touched && f_description.errors){
                     <div class="invalid-feedback d-block">
-                        @if(f_description?.errors?.['required']){ <span>Description is required.</span> }
+                        @if(f_description.errors['required']){
+                        <span>Description is required.</span>
+                        }
                     </div>
                     }
                 </div>
@@ -149,7 +156,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
 
             <div class="modal-footer">

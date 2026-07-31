@@ -8,6 +8,7 @@ import { jwtDecode } from 'jwt-decode';
 import StorageKeys from '@src/app/constants/storage-keys';
 import { EToasterType, IToaster } from '@src/app/models/utils.model';
 import { ROUTES } from '@src/app/constants/app-routes';
+import { ROLES } from '@src/app/constants/app-config';
 
 
 @Injectable({
@@ -55,6 +56,12 @@ export class Utils {
       return new Date().getTime() < exp * 1000;
     }
     return false;
+  }
+  get isAdmin(): boolean {
+    return this.decodeToken?.user?.role === ROLES.CLUB_ADMIN;
+  }
+  get isSuperAdmin(): boolean {
+    return this.decodeToken?.user?.role === ROLES.SUPER_ADMIN;
   }
 
   logout(clearCacheOnly: boolean = false): void {

@@ -147,13 +147,12 @@ export class Property {
         this.isReqAlive = false;
         if (res.code === 'DELETED') {
           this._coreService.utils.showToaster(EToasterType.Success, 'Property deleted successfully');
-          this.loadList();
-          this.onDeletePropertyCancel();
         } else {
           const msg = res.message || 'Something went wrong. Please try again later';
           this._coreService.utils.showToaster(EToasterType.Danger, msg);
-          this.onDeletePropertyCancel();
         }
+        this.loadList();
+        this.onDeletePropertyCancel();
       },
       error: (err: any) => {
         this.isReqAlive = false;

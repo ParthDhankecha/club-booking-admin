@@ -7,9 +7,11 @@ import { CommonOutlet } from '../layouts/common-outlet/common-outlet';
 import { Resort } from './resort/resort';
 import { Property } from './property/property';
 import { Calendar } from './calendar/calendar';
+import { BlackoutDates } from './blackout-dates/blackout-dates';
 import { ContactUs } from './contact-us/contact-us';
 import { Newsletter } from './newsletter/newsletter';
 import { CancelledOrdersToRefund } from './cancelled-orders-to-refund/cancelled-orders-to-refund';
+import { PageNotFound } from '../shared/components/page-not-found/page-not-found';
 
 
 export const routes: Routes = [
@@ -40,6 +42,11 @@ export const routes: Routes = [
         component: Calendar
     },
     {
+        path: ROUTES.BLACKOUT_DATES,
+        title: APP_PAGE_TITLE.BLACKOUT_DATES,
+        component: BlackoutDates
+    },
+    {
         path: ROUTES.CONTACT_US,
         title: APP_PAGE_TITLE.CONTACT_US,
         component: ContactUs
@@ -54,4 +61,9 @@ export const routes: Routes = [
         title: APP_PAGE_TITLE.CANCELLED_ORDERS,
         component: CancelledOrdersToRefund
     },
+    {
+        path: ROUTES.PAGE_NOT_FOUND,
+        title: APP_PAGE_TITLE.PAGE_NOT_FOUND,
+        component: PageNotFound
+    }
 ];

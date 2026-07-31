@@ -1,6 +1,11 @@
 export const ROUTES = {
     BASE: '',
     HOME: '',
+    SUPER_ADMIN: {
+        LOGIN: 'super-admin',
+        WORKSPACES: 'workspaces',
+        ADMINS: 'admins',
+    },
     AUTH: {
         BASE: 'auth',
         LOGIN: 'login',
@@ -13,6 +18,7 @@ export const ROUTES = {
         UPSERT_IMAGES: 'upsert-images/:id',
     },
     CALENDAR: 'calendar',
+    BLACKOUT_DATES: 'blackout-dates',
     CONTACT_US: 'contact-us',
     NEWSLETTER: 'newsletter',
     CANCELLED_ORDERS: 'cancelled-orders',

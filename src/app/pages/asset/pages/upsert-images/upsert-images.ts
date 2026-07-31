@@ -205,8 +205,8 @@ export class UpsertImages {
         this.isDeleteReqAlive = false;
         if (res.code === 'UPDATED') {
           this._coreService.utils.showToaster(EToasterType.Success, 'Image deleted successfully');
+          this.f_images.removeAt(body.index);
           this.onDeleteImageCancel();
-          this.f_images.removeAt(this.imageData.index);
         }
       },
       error: (err: any) => {
@@ -247,6 +247,7 @@ export class UpsertImages {
         this.isReqAlive = false;
         if (res.code === 'UPDATED') {
           this._coreService.utils.showToaster(EToasterType.Success, 'Images updated successfully');
+          this.getAssetDetails(this.assetData._id);
         }
       },
       error: (err: any) => {

@@ -1,6 +1,7 @@
-import { Component, inject, OnDestroy } from '@angular/core';
+import { Component, HostListener, inject, OnDestroy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 
 import moment, { Moment } from 'moment';
 
@@ -12,6 +13,9 @@ import { ModalLayer } from '@src/app/shared/components/modal-layer/modal-layer';
 import { RegisterModalLayer } from '@src/app/shared/directives/register-modal-layer';
 import { AppSrc } from '@src/app/shared/directives/src';
 import { IResponse } from '@src/app/models/http-response.model';
+
+import { UpsertBlackoutDate } from '../blackout-dates/upsert-blackout-date/upsert-blackout-date';
+import { RemoveBlackoutDate } from '../blackout-dates/remove-blackout-date/remove-blackout-date';
 
 /** Refresh calendar data 10 times per minute (every 6 seconds) */
 const CALENDAR_REFRESH_INTERVAL_MS = (60 * 1000) / 10;
@@ -78,6 +82,7 @@ interface IDaySlot {
   otherMonthLabel?: string;
   /** Per-day segments so a bar can span multiple cells (rounded left on start, right on end) */
   stayBars: IStayBar[];
+  blackout?: any;
 }
 
 @Component({
@@ -88,7 +93,9 @@ interface IDaySlot {
     AppSrc,
     CommonDropdown,
     ModalLayer,
-    RegisterModalLayer
+    RegisterModalLayer,
+    UpsertBlackoutDate,
+    RemoveBlackoutDate
   ],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss',
@@ -133,6 +140,21 @@ export class Calendar implements OnDestroy {
   protected viewType: CalendarViewType = 'weekly';
   protected monthYearLabel: string = '';
   protected fullDayDateLabel: string = '';
+
+  protected blackoutDatesObj: Map<string, any> = new Map();
+
+  protected moreOptionIndex: number = -1;
+  @HostListener('document:click', ['$event'])
+  onWindowClick(event: Event): void {
+    const t = event.target;
+    const insideModalLayer = t instanceof Element && t.closest('app-modal-layer') != null;
+    if (!insideModalLayer) {
+      event.preventDefault();
+    }
+    if (this.moreOptionIndex !== -1) {
+      this.moreOptionIndex = -1;
+    }
+  }
 
 
   ngOnInit(): void {
@@ -209,22 +231,43 @@ export class Calendar implements OnDestroy {
     if (!silentRefresh && this.loading) return;
 
     const dateStr = this.currentViewDate.format('YYYY-MM-DD');
+    const view = this.isAllAssetsMode ? 'full-day' : this.viewType;
+    const dateRange: any = {};
     if (!silentRefresh) {
       this.loading = true;
+      const period = this.isAllAssetsMode ? 'day' : this.getViewPeriod();
+      dateRange.startDate = this.currentViewDate.clone().startOf(period).format('YYYY-MM-DD');
+      dateRange.endDate = this.currentViewDate.clone().endOf(period).format('YYYY-MM-DD');
     }
 
-    const view = this.isAllAssetsMode ? 'full-day' : this.viewType;
-    const body = {
+    const body: { view: CalendarViewType; date: string; assetId?: string } = {
       view,
       date: dateStr,
-      ...(this.isAllAssetsMode ? {} : { assetId: this.selectedAsset?._id }),
-    } as any;
+    };
+    if (!this.isAllAssetsMode) {
+      body.assetId = this.selectedAsset._id;
+    }
 
-    this._apiFs.calendar.view(body).subscribe({
+    forkJoin({
+      ...(!silentRefresh && !this.isAllAssetsMode && {
+        blackoutDates: this._apiFs.blackoutDate.list({
+          type: 'range',
+          sourceId: this.selectedAsset._id,
+          ...dateRange
+        }),
+      }),
+      calendar: this._apiFs.calendar.view(body),
+    }).subscribe({
       next: (res: any) => {
         this.loading = false;
-        if (res?.code === 'OK') {
-          const data = res.data;
+        const { blackoutDates, calendar } = res;
+        if (blackoutDates?.code === 'OK') {
+          this.applyBlackoutListToMap(blackoutDates.data?.list ?? []);
+        } else if (this.isAllAssetsMode) {
+          this.blackoutDatesObj.clear();
+        }
+        if (calendar?.code === 'OK') {
+          const data = calendar.data;
           this.calendarData = data;
           if (view === 'full-day') {
             this.buildFullDayAssetRows(data);
@@ -243,10 +286,70 @@ export class Calendar implements OnDestroy {
     });
   }
 
+  private getViewPeriod(): 'isoWeek' | 'month' | 'day' {
+    if (this.viewType === 'weekly') return 'isoWeek';
+    if (this.viewType === 'monthly') return 'month';
+    return 'day';
+  }
+
   /** Parse to moment for consistent date handling */
   private parseMoment(s: string): Moment {
     const m = moment(s);
     return m.isValid() ? m : moment();
+  }
+
+  /** Every calendar day YYYY-MM-DD in [startISO, endISO] inclusive; empty end → single day at start. */
+  private forEachDayInBlackoutRange(
+    startISO: string,
+    endISO: string | null | undefined,
+    cb: (ymd: string) => void
+  ): void {
+    const lastISO = endISO == null || endISO === '' ? startISO : endISO;
+    const start = this.parseMoment(startISO).startOf('day');
+    const last = this.parseMoment(lastISO).startOf('day');
+    let d = start.clone();
+    while (!d.isAfter(last, 'day')) {
+      cb(d.format('YYYY-MM-DD'));
+      d.add(1, 'day');
+    }
+  }
+
+  /** Map keys are YYYY-MM-DD; values are the full API document (same ref for each day in a range). */
+  private setBlackoutRangeInMap(doc: any): void {
+    if (doc?.startDate) {
+      this.forEachDayInBlackoutRange(doc.startDate, doc.endDate, (ymd) => {
+        this.blackoutDatesObj.set(ymd, doc);
+      });
+    } else if (doc?.date) {
+      this.blackoutDatesObj.set(String(doc.date).substring(0, 10), doc);
+    }
+  }
+
+  private applyBlackoutListToMap(list: any[]): void {
+    this.blackoutDatesObj.clear();
+    for (const item of list ?? []) {
+      this.setBlackoutRangeInMap(item);
+    }
+  }
+
+  private removeBlackoutIdFromMap(blackoutId: string): void {
+    for (const [ymd, doc] of this.blackoutDatesObj.entries()) {
+      if (doc?._id === blackoutId) {
+        this.blackoutDatesObj.delete(ymd);
+      }
+    }
+  }
+
+  /** Re-apply map to visible cells after create/update/delete. */
+  private syncSlotBlackoutsFromMap(): void {
+    for (const slot of this.daySlots) {
+      const doc = this.blackoutDatesObj.get(slot.date);
+      if (doc) {
+        slot.blackout = doc;
+      } else {
+        delete slot.blackout;
+      }
+    }
   }
 
   /** Occupied nights for a stay: [checkIn, checkOut) — check-in inclusive, check-out exclusive. */
@@ -488,6 +591,9 @@ export class Calendar implements OnDestroy {
     };
     obj.bookedBarPct = this.getBookedBarPct(obj);
     obj.basketBarPct = this.getBasketBarPct(obj);
+    if (this.blackoutDatesObj.size > 0 && this.blackoutDatesObj.has(dateStr)) {
+      obj.blackout = this.blackoutDatesObj.get(dateStr);
+    }
     return obj;
   }
 
@@ -636,6 +742,74 @@ export class Calendar implements OnDestroy {
     if (guest.isCoMember === false) return 'Family member';
     if (guest.guestName) return 'Other guest';
     return '';
+  }
+
+  protected toggleMoreOption(index: number): void {
+    this.moreOptionIndex = this.moreOptionIndex == index ? -1 : index;
+  }
+
+  protected readonly upsertBlackoutModalId = 'upsert-blackout-date-modal';
+  protected upsertBlackout: any;
+  protected onUpsertBlackoutMenu(data: any): void {
+    this.upsertBlackout = data?.blackout || {
+      startDate: data.date,
+      sourceId: this.selectedAsset._id,
+    };
+    this._coreService.modal.open(this.upsertBlackoutModalId);
+  }
+
+  protected blackoutUpsertEvent(event?: any): void {
+    if (!event) {
+      this._coreService.modal.close(this.upsertBlackoutModalId);
+      this.upsertBlackout = null;
+      return;
+    }
+
+    const sourceId = event?.sourceId?._id ?? event?.sourceId;
+    delete event.createdAt;
+    delete event.updatedAt;
+
+    if (sourceId === this.selectedAsset._id) {
+      const merged = { ...event, sourceId };
+      const prevId = this.upsertBlackout?._id;
+      if (prevId) {
+        this.removeBlackoutIdFromMap(prevId);
+      }
+      this.setBlackoutRangeInMap(merged);
+      this.syncSlotBlackoutsFromMap();
+    } else if (this.upsertBlackout?._id) {
+      this.removeBlackoutIdFromMap(this.upsertBlackout._id);
+      this.syncSlotBlackoutsFromMap();
+    }
+
+    this._coreService.modal.close(this.upsertBlackoutModalId);
+    this.upsertBlackout = null;
+  }
+
+  protected readonly deleteBlackoutModalId = 'delete-blackout-date-modal';
+  protected blackoutDeleteData: any = null;
+  protected openBlackoutDeleteModal(data: any): void {
+    if (data?.sourceId !== this.selectedAsset._id) return;
+
+    this.blackoutDeleteData = {
+      ...data,
+      sourceId: {
+        _id: this.selectedAsset._id,
+        title: this.selectedAsset.title
+      },
+      propertyTitle: this.selectedAsset?.propertyTitle ?? ''
+    };
+    this._coreService.modal.open(this.deleteBlackoutModalId);
+  }
+
+  protected blackoutDeleteCloseEvent(event: any): void {
+    if (event && this.blackoutDeleteData?._id) {
+      this.removeBlackoutIdFromMap(this.blackoutDeleteData._id);
+      this.syncSlotBlackoutsFromMap();
+    }
+
+    this.blackoutDeleteData = null;
+    this._coreService.modal.close(this.deleteBlackoutModalId);
   }
 
   /** Club orders use credits instead of currency amounts. */

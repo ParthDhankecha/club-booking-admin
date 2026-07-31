@@ -9,6 +9,12 @@ $calendar-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.08);
   max-width: 100%;
 }
 
+:host ::ng-deep {
+  .dropdown-list-wrap {
+    min-width: calc(200px + 4rem);
+  }
+}
+
 .calendar-page-header {
   display: flex;
   flex-wrap: wrap;

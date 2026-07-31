@@ -4,10 +4,11 @@ import { ROUTES } from './constants/app-routes';
 import { APP_PAGE_TITLE } from './constants/app-config';
 
 import { MainLayout } from './layouts/main-layout/main-layout';
-import { PageNotFound } from './shared/components/page-not-found/page-not-found';
 
 import { authGuard } from './core/guards/auth-guard';
 import { CommonOutlet } from './layouts/common-outlet/common-outlet';
+import { adminGuard } from './core/guards/admin-guard';
+import { superAdminGuard } from './core/guards/super-admin-guard';
 
 
 export const routes: Routes = [
@@ -16,7 +17,16 @@ export const routes: Routes = [
         title: APP_PAGE_TITLE.BRAND_NAME,
         component: MainLayout,
         canActivate: [authGuard],
+        canMatch: [adminGuard],
         loadChildren: () => import('./pages/pages.routes').then(m => m.routes),
+    },
+    {
+        path: ROUTES.BASE,
+        title: APP_PAGE_TITLE.BRAND_NAME,
+        component: MainLayout,
+        canActivate: [authGuard],
+        canMatch: [superAdminGuard],
+        loadChildren: () => import('./pages/super-admin.routes').then(m => m.routes),
     },
     {
         path: ROUTES.AUTH.BASE,
@@ -26,7 +36,6 @@ export const routes: Routes = [
     },
     {
         path: ROUTES.PAGE_NOT_FOUND,
-        title: APP_PAGE_TITLE.PAGE_NOT_FOUND,
-        component: PageNotFound
+        redirectTo: ROUTES.getFullRoute(ROUTES.AUTH.BASE),
     }
 ];

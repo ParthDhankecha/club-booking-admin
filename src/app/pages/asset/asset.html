@@ -11,12 +11,12 @@
                 [filterKeys]="['title']" displayKey1="title" [enableSameSelectRemove]="true"
                 (onSelect)="onResortFilterSelected($event)" />
 
-            <input type="text" name="searchProperty" class="form-control w-auto mw-100" placeholder="Search property"
-                [(ngModel)]="searchProperty" />
-
             <app-common-dropdown [selectedOption]="selectedProperty" [optionsList]="propertyList"
                 placeholder="Select property" [filterKeys]="['title']" displayKey1="title"
                 [enableSameSelectRemove]="true" (onSelect)="onPropertySelected($event)" />
+
+            <input type="text" name="search" class="form-control w-auto mw-100" placeholder="Search by title"
+                [(ngModel)]="searchInput" />
 
             <button class="btn btn-sm btn-outline-primary" (click)="onSearch()">
                 Search
@@ -29,15 +29,13 @@
             + Add New
         </button>
     </div>
+
     <!-- Loader -->
     @if(loading){
     <div class="text-center">
         <div class="spinner-border text-primary"></div>
     </div>
-    }
-
-    <!-- Table -->
-    @if(!loading){
+    }@else {<!-- Table -->
     <div class="table-responsive-xl">
         <table class="table table-striped table-hover">
             <thead class="table-light">
@@ -176,7 +174,7 @@
                     <button type="button" class="btn-close" (click)="onChangeAssetStatusCancel()"></button>
                 </div>
                 <div class="modal-body">
-                    <p>
+                    <p class="text-center">
                         Are you sure you want to change the status of
                         <span class="text-danger fw-bold text-capitalize">
                             {{ assetData?.title }}
@@ -214,7 +212,7 @@
                     <button type="button" class="btn-close" (click)="onDeleteAssetCancel()"></button>
                 </div>
                 <div class="modal-body">
-                    <p>
+                    <p class="text-center">
                         Are you sure you want to delete
                         <span class="text-danger fw-bold text-capitalize">
                             {{ assetData?.title }}

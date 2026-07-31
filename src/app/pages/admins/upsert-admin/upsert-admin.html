@@ -1,0 +1,130 @@
+<div class="modal d-block">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content shadow-lg" [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">
+                    {{ isEditMode ? 'Edit' : 'Create' }} Admin
+                </h1>
+                <button type="button" class="btn-close" (click)="onCloseOrCancel()"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="workspaceId" class="form-label">
+                        Workspace <span class="text-danger">*</span>
+                    </label>
+                    <select id="workspaceId" formControlName="workspaceId" class="form-select text-capitalize"
+                        [class.disabled]="isEditMode">
+                        <option value="" selected disabled>
+                            Select workspace
+                        </option>
+                        @for (workspace of workspaces; track workspace._id) {
+                        <option [value]="workspace._id">
+                            {{ workspace.title }}
+                        </option>
+                        }
+                    </select>
+
+                    @if (f_workspaceId && f_workspaceId.touched && f_workspaceId.errors) {
+                    <div class="invalid-feedback d-block">
+                        @if (f_workspaceId.errors['required']) {
+                        <span>Workspace is required.</span>
+                        }
+                    </div>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label for="fullname" class="form-label">
+                        Full Name <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" id="fullname" formControlName="fullname" class="form-control"
+                        placeholder="Enter full name">
+
+                    @if (f_fullname && f_fullname.touched && f_fullname.errors) {
+                    <div class="invalid-feedback d-block">
+                        @if (f_fullname.errors['required']) {
+                        <span>Full name is required.</span>
+                        }
+                        @if (f_fullname.errors['maxlength']) {
+                        <span>Full name cannot exceed
+                            {{ f_fullname.errors['maxlength'].requiredLength }} characters.
+                        </span>
+                        }
+                    </div>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">
+                        Email <span class="text-danger">*</span>
+                    </label>
+                    <input type="email" id="email" formControlName="email" class="form-control"
+                        placeholder="Enter email address">
+
+                    @if (f_email && f_email.touched && f_email.errors) {
+                    <div class="invalid-feedback d-block">
+                        @if (f_email.errors['required']) {
+                        <span>Email is required.</span>
+                        }
+                        @if (f_email.errors['email']) {
+                        <span>Enter a valid email address.</span>
+                        }
+                        @if (f_email.errors['maxlength']) {
+                        <span>Email cannot exceed
+                            {{ f_email.errors['maxlength'].requiredLength }} characters.
+                        </span>
+                        }
+                    </div>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">
+                        Password @if (!isEditMode) {<span class="text-danger">*</span>}
+                    </label>
+                    <input type="password" id="password" formControlName="password" class="form-control"
+                        [placeholder]="isEditMode ? 'Leave blank to keep current password' : 'Enter password'">
+
+                    @if (f_password && f_password.touched && f_password.errors) {
+                    <div class="invalid-feedback d-block">
+                        @if (f_password.errors['required']) {
+                        <span>Password is required.</span>
+                        }
+                        @if (f_password.errors['minlength']) {
+                        <span>Password must be at least
+                            {{ f_password.errors['minlength'].requiredLength }} characters.
+                        </span>
+                        }
+                    </div>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check form-switch d-flex align-items-center justify-content-between p-0">
+                        <label class="form-check-label" for="isActive">
+                            Active
+                        </label>
+                        <input class="form-check-input fs-5 m-0" type="checkbox" id="isActive"
+                            formControlName="isActive" role="switch">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary me-3" (click)="onCloseOrCancel()">
+                    Cancel
+                </button>
+                <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                    [class.disabled]="isReqAlive" [disabled]="isReqAlive">
+                    @if (!isReqAlive) {
+                    <span>{{ isEditMode ? 'Save Changes' : 'Create New' }}</span>
+                    } @else {
+                    <span class="spinner-border spinner-border-sm"></span>
+                    <span role="status">&nbsp; Please wait...</span>
+                    }
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

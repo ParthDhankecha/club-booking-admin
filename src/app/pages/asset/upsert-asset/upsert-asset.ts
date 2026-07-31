@@ -49,7 +49,6 @@ export class UpsertAsset {
       kids: [null, [Validators.required, Validators.min(0)]],
     }),
     description: [null, [Validators.required, Validators.maxLength(5000)]],
-    price: [null, [Validators.min(0)]],
     quantity: [null, [Validators.required, Validators.min(1)]],
     location: this._fb.group({
       mapLink: [''],
@@ -150,7 +149,6 @@ export class UpsertAsset {
               kids: this.data.maxLimit?.kids ?? 0,
             },
             description: this.data.description,
-            price: this.data.price,
             quantity: this.data.quantity,
             resort: (resortId && this.resortList?.find((r) => r._id === resortId)) ?? null,
           });
@@ -209,9 +207,6 @@ export class UpsertAsset {
   }
   get f_description(): AbstractControl | null {
     return this.form.get('description');
-  }
-  get f_price(): AbstractControl | null {
-    return this.form.get('price');
   }
   get f_quantity(): AbstractControl | null {
     return this.form.get('quantity');
@@ -290,7 +285,6 @@ export class UpsertAsset {
         kids: form.maxLimit?.kids,
       },
       description: form.description?.trim(),
-      price: form.price,
       quantity: form.quantity,
       resortId: form.resort?._id,
       propertyId: form.property?._id,

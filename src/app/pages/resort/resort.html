@@ -25,8 +25,12 @@
                 <tr>
                     <th>#</th>
                     <th>Thumb</th>
-                    <th>Title</th>
-                    <th>Address</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th class="text-center w-1-percent">
+                        Status
+                    </th>
                     <th class="text-center w-1-percent">
                         Actions
                     </th>
@@ -47,8 +51,18 @@
                     <td class="text-capitalize">
                         {{ resort.title }}
                     </td>
-                    <td class="text-muted small">
-                        {{ resort.address || '—' }}
+                    <td>
+                        {{ resort.phone || '—' }}
+                    </td>
+                    <td class="text-lowercase">
+                        {{ resort.email || '—' }}
+                    </td>
+                    <td class="text-center">
+                        <span class="badge rounded-pill cursor-pointer"
+                            [class]="resort.isPublished ? 'bg-success' : 'bg-danger'"
+                            (click)="onChangeResortStatus(resort)">
+                            {{ resort.isPublished ? 'Published' : 'Unpublished' }}
+                        </span>
                     </td>
                     <td>
                         <div class="dropdown d-block text-center">
@@ -97,7 +111,7 @@
                 </tr>
                 }@empty{
                 <tr>
-                    <td colspan="5" class="text-center">
+                    <td colspan="7" class="text-center">
                         No resorts found
                     </td>
                 </tr>
@@ -163,6 +177,44 @@
                     </button>
                     <button type="button" class="btn btn-danger" (click)="onConfirmDeleteResort()">
                         Confirm delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</app-modal-layer>
+
+<!-- Change resort status modal -->
+<app-modal-layer [appRegisterModalLayer]="changeResortStatusModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(changeResortStatusModalId)) {
+    <div class="modal d-block">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">
+                        Change Resort Status
+                    </h1>
+                    <button type="button" class="btn-close" (click)="onChangeResortStatusCancel()"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-center">
+                        Are you sure you want to change the status of
+                        <span class="text-danger fw-bold text-capitalize">
+                            {{ resortData?.title }}
+                        </span>
+                        resort to
+                        <span class="text-danger fw-bold text-capitalize">
+                            {{ resortData?.isPublished ? 'Unpublished' : 'Published' }}
+                        </span>?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary me-3" (click)="onChangeResortStatusCancel()">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" (click)="onConfirmChangeResortStatus()">
+                        Confirm Change
                     </button>
                 </div>
             </div>
