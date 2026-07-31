@@ -4,6 +4,7 @@ import { ROUTES } from '@src/app/constants/app-routes';
 import { APP_PAGE_TITLE } from '@src/app/constants/app-config';
 
 import { Login } from './login/login';
+import { SuperAdminLogin } from './super-admin-login/super-admin-login';
 import { PageNotFound } from '@src/app/shared/components/page-not-found/page-not-found';
 
 
@@ -17,6 +18,11 @@ export const routes: Routes = [
         path: ROUTES.AUTH.LOGIN,
         title: APP_PAGE_TITLE.AUTH.LOGIN,
         component: Login
+    },
+    {
+        path: ROUTES.SUPER_ADMIN.LOGIN,
+        title: APP_PAGE_TITLE.SUPER_ADMIN.LOGIN,
+        component: SuperAdminLogin
     },
     {
         path: ROUTES.PAGE_NOT_FOUND,

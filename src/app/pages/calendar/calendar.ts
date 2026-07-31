@@ -1,6 +1,7 @@
-import { Component, inject, OnDestroy } from '@angular/core';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { Component, HostListener, inject, OnDestroy } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 
 import moment, { Moment } from 'moment';
 
@@ -13,10 +14,13 @@ import { RegisterModalLayer } from '@src/app/shared/directives/register-modal-la
 import { AppSrc } from '@src/app/shared/directives/src';
 import { IResponse } from '@src/app/models/http-response.model';
 
+import { UpsertBlackoutDate } from '../blackout-dates/upsert-blackout-date/upsert-blackout-date';
+import { RemoveBlackoutDate } from '../blackout-dates/remove-blackout-date/remove-blackout-date';
+
 /** Refresh calendar data 10 times per minute (every 6 seconds) */
 const CALENDAR_REFRESH_INTERVAL_MS = (60 * 1000) / 10;
 
-export type CalendarViewType = 'weekly' | 'monthly';
+export type CalendarViewType = 'weekly' | 'monthly' | 'full-day';
 
 /** Day names Monday-first to match front calendar (moment isoWeekday: Mon=1 .. Sun=7) */
 const DAY_NAMES_MON_FIRST = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -30,6 +34,36 @@ export interface IStayBar {
   units?: number;
   /** Set for bookings (not basket items); used to open order details popup */
   orderId?: string;
+}
+
+/** One card in the full-day (all assets) horizontal row */
+export interface IFullDayItemCard {
+  kind: 'order' | 'basket';
+  _id?: string;
+  orderId?: string;
+  orderNo?: number;
+  status?: string;
+  uid?: number;
+  units: number;
+  adults?: number;
+  kids?: { age: number; count: number }[];
+  guest?: {
+    guestName?: string;
+    fullname?: string;
+    phone?: string;
+    mobile?: string;
+    isCoMember?: boolean;
+    emergencyContact?: string;
+  };
+}
+
+/** One asset row in the full-day board */
+export interface IFullDayAssetRow {
+  assetId: string;
+  assetTitle: string;
+  bookingCount: number;
+  queueCount: number;
+  items: IFullDayItemCard[];
 }
 
 interface IDaySlot {
@@ -48,6 +82,7 @@ interface IDaySlot {
   otherMonthLabel?: string;
   /** Per-day segments so a bar can span multiple cells (rounded left on start, right on end) */
   stayBars: IStayBar[];
+  blackout?: any;
 }
 
 @Component({
@@ -55,11 +90,12 @@ interface IDaySlot {
   imports: [
     FormsModule,
     DatePipe,
-    CurrencyPipe,
     AppSrc,
     CommonDropdown,
     ModalLayer,
-    RegisterModalLayer
+    RegisterModalLayer,
+    UpsertBlackoutDate,
+    RemoveBlackoutDate
   ],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss',
@@ -78,22 +114,47 @@ export class Calendar implements OnDestroy {
   /** Current image index in asset images gallery */
   protected assetImageIndex = 0;
 
+  protected readonly autoRefreshIntervalSec = CALENDAR_REFRESH_INTERVAL_MS / 1000;
+  protected autoRefreshEnabled = false;
+  protected autoRefreshTitle: string = '';
+
   protected assetList: any[] = [];
+  private _assetTitleMap: Map<string, string> = new Map();
   protected selectedAsset: any = null;
+  protected isAllAssetsMode: boolean = true;
   protected loading = false;
   protected calendarData: {
     range: { start: string; end: string };
     view: string;
-    assetId: string;
+    assetId?: string | null;
     bookings: any[];
-    basketItems: any[];
+    basketItems: Record<string, any[]> | any[];
   } | null = null;
+  protected fullDayAssetRows: IFullDayAssetRow[] = [];
+  protected fullDayTotalBookings = 0;
+  protected fullDayTotalQueue = 0;
   protected daySlots: IDaySlot[] = [];
   protected weekStart: Date | null = null;
   protected weekEnd: Date | null = null;
   protected currentViewDate: Moment = moment();
   protected viewType: CalendarViewType = 'weekly';
   protected monthYearLabel: string = '';
+  protected fullDayDateLabel: string = '';
+
+  protected blackoutDatesObj: Map<string, any> = new Map();
+
+  protected moreOptionIndex: number = -1;
+  @HostListener('document:click', ['$event'])
+  onWindowClick(event: Event): void {
+    const t = event.target;
+    const insideModalLayer = t instanceof Element && t.closest('app-modal-layer') != null;
+    if (!insideModalLayer) {
+      event.preventDefault();
+    }
+    if (this.moreOptionIndex !== -1) {
+      this.moreOptionIndex = -1;
+    }
+  }
 
 
   ngOnInit(): void {
@@ -110,24 +171,36 @@ export class Calendar implements OnDestroy {
 
   private startRefreshTimer(): void {
     this.clearRefreshTimer();
+    if (!this.autoRefreshEnabled) {
+      return;
+    }
+
     this._refreshTimer = setInterval(() => {
-      if (this.selectedAsset?._id) {
-        this.loadCalendar(true);
-      } else {
-        this.clearRefreshTimer();
-      }
+      this.loadCalendar(true);
     }, CALENDAR_REFRESH_INTERVAL_MS);
+  }
+
+  protected toggleAutoRefresh(): void {
+    this.autoRefreshEnabled = !this.autoRefreshEnabled;
+    if (this.autoRefreshEnabled) {
+      this.autoRefreshTitle = `Auto refresh on (every ${this.autoRefreshIntervalSec}s)`;
+      this.startRefreshTimer();
+    } else {
+      this.autoRefreshTitle = 'Auto refresh off';
+      this.clearRefreshTimer();
+    }
+  }
+
+  protected getAssetTitle(assetId: string | undefined | null): string {
+    if (!assetId) return 'Asset';
+    const id = String(assetId);
+    return this.assetList.find((a) => String(a._id) === id)?.title ?? 'Asset';
   }
 
   protected onAssetSelected(asset: any): void {
     this.selectedAsset = asset ?? null;
-    if (!this.selectedAsset) {
-      this.clearRefreshTimer();
-      return;
-    }
-    if (this.selectedAsset?.quantity != null) {
-      this.loadCalendar();
-    }
+    this.isAllAssetsMode = !asset?._id;
+    this.loadCalendar();
   }
 
   protected setViewType(view: CalendarViewType): void {
@@ -140,10 +213,14 @@ export class Calendar implements OnDestroy {
     this._apiFs.asset.masterData({ calendarList: 'list' }).subscribe({
       next: (res: IResponse) => {
         if (res.code === 'OK' && res.data != null) {
-          this.assetList = (res.data?.list ?? []).map((item: any) => ({
-            ...item,
-            propertyTitle: item?.propertyId?.title ?? '',
-          }));
+          this.assetList = (res.data?.list ?? res.data?.calendarList ?? []).map((item: any) => {
+            this._assetTitleMap.set(item._id, item.title);
+            return {
+              ...item,
+              propertyTitle: item?.propertyId?.title ?? '',
+            };
+          });
+          this.loadCalendar();
         }
       },
       error: (err) => console.error('Error loading assets', err),
@@ -151,36 +228,68 @@ export class Calendar implements OnDestroy {
   }
 
   protected loadCalendar(silentRefresh = false): void {
-    if (!this.selectedAsset?._id || (!silentRefresh && this.loading)) return;
+    if (!silentRefresh && this.loading) return;
 
     const dateStr = this.currentViewDate.format('YYYY-MM-DD');
+    const view = this.isAllAssetsMode ? 'full-day' : this.viewType;
     const dateRange: any = {};
     if (!silentRefresh) {
       this.loading = true;
-      const period = this.viewType === 'weekly' ? 'isoWeek' : 'month';
+      const period = this.isAllAssetsMode ? 'day' : this.getViewPeriod();
       dateRange.startDate = this.currentViewDate.clone().startOf(period).format('YYYY-MM-DD');
       dateRange.endDate = this.currentViewDate.clone().endOf(period).format('YYYY-MM-DD');
     }
 
-    const body = {
-      assetId: this.selectedAsset._id,
-      view: this.viewType,
+    const body: { view: CalendarViewType; date: string; assetId?: string } = {
+      view,
       date: dateStr,
     };
-    this._apiFs.calendar.view(body).subscribe({
+    if (!this.isAllAssetsMode) {
+      body.assetId = this.selectedAsset._id;
+    }
+
+    forkJoin({
+      ...(!silentRefresh && !this.isAllAssetsMode && {
+        blackoutDates: this._apiFs.blackoutDate.list({
+          type: 'range',
+          sourceId: this.selectedAsset._id,
+          ...dateRange
+        }),
+      }),
+      calendar: this._apiFs.calendar.view(body),
+    }).subscribe({
       next: (res: any) => {
         this.loading = false;
-        if (res?.code === 'OK') {
-          const data = res.data;
+        const { blackoutDates, calendar } = res;
+        if (blackoutDates?.code === 'OK') {
+          this.applyBlackoutListToMap(blackoutDates.data?.list ?? []);
+        } else if (this.isAllAssetsMode) {
+          this.blackoutDatesObj.clear();
+        }
+        if (calendar?.code === 'OK') {
+          const data = calendar.data;
           this.calendarData = data;
+          if (view === 'full-day') {
+            this.buildFullDayAssetRows(data);
+          } else {
+            this.fullDayAssetRows = [];
+            this.fullDayTotalBookings = 0;
+            this.fullDayTotalQueue = 0;
+          }
           this.buildDaySlots();
           this.startRefreshTimer();
         }
       },
-      error: (err: any) => {
+      error: () => {
         this.loading = false;
       }
     });
+  }
+
+  private getViewPeriod(): 'isoWeek' | 'month' | 'day' {
+    if (this.viewType === 'weekly') return 'isoWeek';
+    if (this.viewType === 'monthly') return 'month';
+    return 'day';
   }
 
   /** Parse to moment for consistent date handling */
@@ -189,14 +298,139 @@ export class Calendar implements OnDestroy {
     return m.isValid() ? m : moment();
   }
 
-  /** Check if a day (YYYY-MM-DD) falls within [start, end] inclusive. E.g. start 25, end 27 = booked for 25, 26, 27. */
-  private dayOverlapsRange(dayYMD: string, startISO: string, endISO: string): boolean {
-    const day = moment(dayYMD).startOf('day');
+  /** Every calendar day YYYY-MM-DD in [startISO, endISO] inclusive; empty end → single day at start. */
+  private forEachDayInBlackoutRange(
+    startISO: string,
+    endISO: string | null | undefined,
+    cb: (ymd: string) => void
+  ): void {
+    const lastISO = endISO == null || endISO === '' ? startISO : endISO;
     const start = this.parseMoment(startISO).startOf('day');
-    const end = this.parseMoment(endISO).startOf('day');
-    return !day.isBefore(start, 'day') && !day.isAfter(end, 'day');
+    const last = this.parseMoment(lastISO).startOf('day');
+    let d = start.clone();
+    while (!d.isAfter(last, 'day')) {
+      cb(d.format('YYYY-MM-DD'));
+      d.add(1, 'day');
+    }
   }
 
+  /** Map keys are YYYY-MM-DD; values are the full API document (same ref for each day in a range). */
+  private setBlackoutRangeInMap(doc: any): void {
+    if (doc?.startDate) {
+      this.forEachDayInBlackoutRange(doc.startDate, doc.endDate, (ymd) => {
+        this.blackoutDatesObj.set(ymd, doc);
+      });
+    } else if (doc?.date) {
+      this.blackoutDatesObj.set(String(doc.date).substring(0, 10), doc);
+    }
+  }
+
+  private applyBlackoutListToMap(list: any[]): void {
+    this.blackoutDatesObj.clear();
+    for (const item of list ?? []) {
+      this.setBlackoutRangeInMap(item);
+    }
+  }
+
+  private removeBlackoutIdFromMap(blackoutId: string): void {
+    for (const [ymd, doc] of this.blackoutDatesObj.entries()) {
+      if (doc?._id === blackoutId) {
+        this.blackoutDatesObj.delete(ymd);
+      }
+    }
+  }
+
+  /** Re-apply map to visible cells after create/update/delete. */
+  private syncSlotBlackoutsFromMap(): void {
+    for (const slot of this.daySlots) {
+      const doc = this.blackoutDatesObj.get(slot.date);
+      if (doc) {
+        slot.blackout = doc;
+      } else {
+        delete slot.blackout;
+      }
+    }
+  }
+
+  /** Occupied nights for a stay: [checkIn, checkOut) — check-in inclusive, check-out exclusive. */
+  private dayInStayRange(dayYMD: string, checkInISO: string, checkOutISO: string): boolean {
+    const day = moment(dayYMD).startOf('day');
+    const checkIn = this.parseMoment(checkInISO).startOf('day');
+    const checkOut = this.parseMoment(checkOutISO).startOf('day');
+    return !day.isBefore(checkIn, 'day') && day.isBefore(checkOut, 'day');
+  }
+
+  private buildFullDayAssetRows(data: {
+    bookings?: { _id: string; orders?: any[] }[];
+    basketItems?: Record<string, any[]>;
+  }): void {
+    const bookingsByAsset = new Map<string, any[]>();
+    for (const group of data.bookings ?? []) {
+      bookingsByAsset.set(String(group._id), group.orders ?? []);
+    }
+
+    const basketItemsMap: Record<string, any[]> = data.basketItems ?? {};
+    const assetIds = new Set<string>([
+      ...bookingsByAsset.keys(),
+      ...Object.keys(basketItemsMap),
+    ]);
+
+    const rows: IFullDayAssetRow[] = [];
+    let totalBookings = 0;
+    let totalQueue = 0;
+
+    for (const assetId of assetIds) {
+      const orders = bookingsByAsset.get(assetId) ?? [];
+      const basketItems = basketItemsMap[assetId] ?? [];
+      const items: IFullDayItemCard[] = [];
+
+      for (const order of orders) {
+        items.push({
+          kind: 'order',
+          _id: order._id,
+          orderId: order.orderId,
+          orderNo: order.orderNo,
+          status: order.status,
+          units: order.units ?? 1,
+          adults: order.adults,
+          kids: order.kids,
+          guest: order.guest,
+        });
+      }
+
+      for (const item of basketItems) {
+        items.push({
+          kind: 'basket',
+          _id: `basket-${item.uid}`,
+          uid: item.uid,
+          units: item.units ?? 1,
+          adults: item.data?.adults ?? item.adults,
+          kids: item.data?.kids ?? item.kids,
+          guest: item.guest,
+        });
+      }
+
+      totalBookings += orders.length;
+      totalQueue += basketItems.length;
+
+      rows.push({
+        assetId,
+        assetTitle: this._assetTitleMap.get(assetId) ?? this.getAssetTitle(assetId),
+        bookingCount: orders.length,
+        queueCount: basketItems.length,
+        items,
+      });
+    }
+
+    rows.sort((a, b) => a.assetTitle.localeCompare(b.assetTitle));
+    this.fullDayAssetRows = rows;
+    this.fullDayTotalBookings = totalBookings;
+    this.fullDayTotalQueue = totalQueue;
+  }
+
+  protected fullDayItemTrack(item: IFullDayItemCard, idx: number): string | number {
+    return item.kind === 'order' ? (`${item.orderId ?? item.orderNo}-${idx}`) : `${item.uid}-${idx}`;
+  }
 
   private buildDaySlots(): void {
     const data = this.calendarData;
@@ -209,16 +443,26 @@ export class Calendar implements OnDestroy {
     const quantity = this.selectedAsset?.quantity ?? 0;
     const slots: IDaySlot[] = [];
     const todayYMD = moment().format('YYYY-MM-DD');
+    const view = this.isAllAssetsMode ? 'full-day' : this.viewType;
 
-    if (this.viewType === 'weekly') {
+    if (view === 'full-day') {
+      slots.push(this.buildOneSlot(start, quantity, todayYMD, { bookings: [], basketItems: [] }));
+      this.daySlots = slots;
+      this.weekStart = moment(slots[0].date).toDate();
+      this.weekEnd = this.weekStart;
+      this.monthYearLabel = '';
+      this.fullDayDateLabel = start.format('dddd, D MMMM YYYY');
+    } else if (view === 'weekly') {
+      const slotData = this.slotDataForGrid(data);
       for (let i = 0; i < 7; i++) {
         const d = start.clone().add(i, 'days');
-        slots.push(this.buildOneSlot(d, quantity, todayYMD, data));
+        slots.push(this.buildOneSlot(d, quantity, todayYMD, slotData));
       }
       this.daySlots = slots;
       this.weekStart = slots.length ? moment(slots[0].date).toDate() : null;
       this.weekEnd = slots.length ? moment(slots[slots.length - 1].date).toDate() : null;
       this.monthYearLabel = '';
+      this.fullDayDateLabel = '';
     } else {
       this.monthYearLabel = start.format('MMMM YYYY');
       const firstDayOfWeek = start.isoWeekday(); // Monday=1, Sunday=7
@@ -237,10 +481,11 @@ export class Calendar implements OnDestroy {
         prevDayNum++;
       }
 
+      const slotData = this.slotDataForGrid(data);
       // Current month: 1..daysInMonth so we never miss the last day (e.g. March 31)
       for (let day = 1; day <= daysInMonth; day++) {
         const d = start.clone().date(day);
-        slots.push(this.buildOneSlot(d, quantity, todayYMD, data));
+        slots.push(this.buildOneSlot(d, quantity, todayYMD, slotData));
       }
 
       // Next month days to complete last week
@@ -265,7 +510,20 @@ export class Calendar implements OnDestroy {
       this.daySlots = slots;
       this.weekStart = slots.length ? moment(slots[0].date).toDate() : null;
       this.weekEnd = slots.length ? moment(slots[slots.length - 1].date).toDate() : null;
+      this.fullDayDateLabel = '';
     }
+  }
+
+  private slotDataForGrid(data: {
+    bookings?: any[]; basketItems?: any[] | Record<string, any[]>;
+  } | null): { bookings: any[]; basketItems: any[] } {
+    if (!data) {
+      return { bookings: [], basketItems: [] };
+    }
+    return {
+      bookings: data.bookings ?? [],
+      basketItems: Array.isArray(data.basketItems) ? data.basketItems : [],
+    };
   }
 
   private buildOneSlot(d: Moment, quantity: number, todayYMD: string, data: { bookings?: any[]; basketItems?: any[] }): IDaySlot {
@@ -276,17 +534,18 @@ export class Calendar implements OnDestroy {
     const stayBars: IStayBar[] = [];
 
     (data.bookings ?? []).forEach((b: any) => {
-      if (!this.dayOverlapsRange(dateStr, b.startDate, b.endDate)) return;
-      const start = this.parseMoment(b.startDate).startOf('day');
-      const end = this.parseMoment(b.endDate).startOf('day');
+      if (!this.dayInStayRange(dateStr, b.startDate, b.endDate)) return;
+      const checkIn = this.parseMoment(b.startDate).startOf('day');
+      const checkOut = this.parseMoment(b.endDate).startOf('day');
+      const lastNight = checkOut.clone().subtract(1, 'day');
       const units = b.units ?? 1;
-      const guest = b.guestDetails?.guestName?.trim();
+      const guest = typeof b.guest === 'string' ? b.guest : b.guest?.guestName ?? '';
       const label = `Order #${b.orderNo} · ${units} unit${units !== 1 ? 's' : ''}${guest ? ` (${guest})` : ''}`;
       const orderId = b.orderId ?? b._id ?? undefined;
       const stayBar: IStayBar = {
         type: 'booked',
-        isStart: d.isSame(start, 'day'),
-        isEnd: d.isSame(end, 'day'),
+        isStart: d.isSame(checkIn, 'day'),
+        isEnd: d.isSame(lastNight, 'day'),
         label: label || 'Booked',
         units: b.units,
         orderId,
@@ -302,14 +561,15 @@ export class Calendar implements OnDestroy {
     });
 
     (data.basketItems ?? []).forEach((b: any) => {
-      if (!this.dayOverlapsRange(dateStr, b.startDate, b.endDate)) return;
+      if (!this.dayInStayRange(dateStr, b.startDate, b.endDate)) return;
       basketUnits += b.units ?? 0;
-      const start = this.parseMoment(b.startDate).startOf('day');
-      const end = this.parseMoment(b.endDate).startOf('day');
+      const checkIn = this.parseMoment(b.startDate).startOf('day');
+      const checkOut = this.parseMoment(b.endDate).startOf('day');
+      const lastNight = checkOut.clone().subtract(1, 'day');
       stayBars.push({
         type: 'basket',
-        isStart: d.isSame(start, 'day'),
-        isEnd: d.isSame(end, 'day'),
+        isStart: d.isSame(checkIn, 'day'),
+        isEnd: d.isSame(lastNight, 'day'),
         label: `#${b.uid ?? 'In queue'}${b.guest?.guestName ? `(${b.guest?.guestName})` : ''}`,
         units: b.units,
       });
@@ -331,16 +591,31 @@ export class Calendar implements OnDestroy {
     };
     obj.bookedBarPct = this.getBookedBarPct(obj);
     obj.basketBarPct = this.getBasketBarPct(obj);
+    if (this.blackoutDatesObj.size > 0 && this.blackoutDatesObj.has(dateStr)) {
+      obj.blackout = this.blackoutDatesObj.get(dateStr);
+    }
     return obj;
   }
 
   protected prevPeriod(): void {
-    this.currentViewDate.subtract(this.viewType === 'weekly' ? 7 : 1, this.viewType === 'weekly' ? 'days' : 'month');
+    if (this.viewType === 'weekly' && !this.isAllAssetsMode) {
+      this.currentViewDate.subtract(7, 'days');
+    } else if (this.viewType === 'full-day' || this.isAllAssetsMode) {
+      this.currentViewDate.subtract(1, 'day');
+    } else {
+      this.currentViewDate.subtract(1, 'month');
+    }
     this.loadCalendar();
   }
 
   protected nextPeriod(): void {
-    this.currentViewDate.add(this.viewType === 'weekly' ? 7 : 1, this.viewType === 'weekly' ? 'days' : 'month');
+    if (this.viewType === 'weekly' && !this.isAllAssetsMode) {
+      this.currentViewDate.add(7, 'days');
+    } else if (this.viewType === 'full-day' || this.isAllAssetsMode) {
+      this.currentViewDate.add(1, 'day');
+    } else {
+      this.currentViewDate.add(1, 'month');
+    }
     this.loadCalendar();
   }
 
@@ -348,6 +623,10 @@ export class Calendar implements OnDestroy {
     const today = moment();
     if (this.loading || this.currentViewDate?.isSame(today, 'day')) return;
     this.currentViewDate = today;
+    this.loadCalendar();
+  }
+
+  protected refreshCalendar(): void {
     this.loadCalendar();
   }
 
@@ -383,16 +662,19 @@ export class Calendar implements OnDestroy {
 
   /** Open details popup for a day (bookings + basket items). */
   protected openDetailsByDate(slot: IDaySlot): void {
-    if (slot.isOtherMonth || !this.selectedAsset?._id) return;
+    if (slot.isOtherMonth) return;
     this.detailsKind = 'date';
     this.detailsData = null;
     this.detailsLoading = true;
     this._coreService.modal.open(this.calendarDetailsModalId);
-    this._apiFs.calendar.details({
+    const payload: { type: 'date'; date: string; assetId?: string } = {
       type: 'date',
       date: slot.date,
-      assetId: this.selectedAsset._id,
-    }).subscribe({
+    };
+    if (this.selectedAsset?._id) {
+      payload.assetId = this.selectedAsset._id;
+    }
+    this._apiFs.calendar.details(payload).subscribe({
       next: (res: IResponse) => {
         this.detailsLoading = false;
         if (res.code === 'OK' && res.data != null) this.detailsData = res.data;
@@ -403,24 +685,37 @@ export class Calendar implements OnDestroy {
     });
   }
 
+  /** Switch from date view to full order details for one booking. */
+  protected openDetailsByOrderId(orderId: string): void {
+    if (!orderId) return;
+
+    this.detailsKind = 'order';
+    this.detailsData = null;
+    this.detailsLoading = true;
+
+    this._apiFs.calendar.details({ type: 'order', orderId }).subscribe({
+      next: (res: IResponse) => {
+        this.detailsLoading = false;
+        if (res.code === 'OK' && res.data != null) this.detailsData = res.data;
+      },
+      error: () => {
+        this.detailsLoading = false;
+      },
+    });
+  }
+
+  protected openOrderDetailsModal(orderId?: string): void {
+    if (!orderId) return;
+
+    this._coreService.modal.open(this.calendarDetailsModalId);
+    this.openDetailsByOrderId(orderId);
+  }
+
   /** Open details popup for an order (full order) or fallback to date for basket items. */
   protected openDetailsByBar(slot: IDaySlot, bar: IStayBar): void {
     if (bar.orderId) {
-      this.detailsKind = 'order';
-      this.detailsData = null;
-      this.detailsLoading = true;
       this._coreService.modal.open(this.calendarDetailsModalId);
-      this._apiFs.calendar.details({ type: 'order', orderId: bar.orderId }).subscribe({
-        next: (res: IResponse) => {
-          this.detailsLoading = false;
-          if (res.code === 'OK' && res.data != null) {
-            this.detailsData = res.data;
-          }
-        },
-        error: () => {
-          this.detailsLoading = false;
-        },
-      });
+      this.openDetailsByOrderId(bar.orderId);
     } else {
       this.openDetailsByDate(slot);
     }
@@ -430,6 +725,100 @@ export class Calendar implements OnDestroy {
     this._coreService.modal.close(this.calendarDetailsModalId);
     this.detailsData = null;
     this.detailsKind = null;
+  }
+
+  protected formatLineKids(kids: { age: number; count: number }[] | undefined): string {
+    if (!kids?.length) {
+      return '';
+    }
+
+    return kids.map((kid) => `${kid.count} kid${kid.count === 1 ? '' : 's'} (age ${kid.age})`).join(', ');
+  }
+
+  protected guestTypeLabel(guest: any): string {
+    if (!guest) return '';
+    if (guest.memberId) return 'Member';
+    if (guest.isCoMember === true) return 'Co-member';
+    if (guest.isCoMember === false) return 'Family member';
+    if (guest.guestName) return 'Other guest';
+    return '';
+  }
+
+  protected toggleMoreOption(index: number): void {
+    this.moreOptionIndex = this.moreOptionIndex == index ? -1 : index;
+  }
+
+  protected readonly upsertBlackoutModalId = 'upsert-blackout-date-modal';
+  protected upsertBlackout: any;
+  protected onUpsertBlackoutMenu(data: any): void {
+    this.upsertBlackout = data?.blackout || {
+      startDate: data.date,
+      sourceId: this.selectedAsset._id,
+    };
+    this._coreService.modal.open(this.upsertBlackoutModalId);
+  }
+
+  protected blackoutUpsertEvent(event?: any): void {
+    if (!event) {
+      this._coreService.modal.close(this.upsertBlackoutModalId);
+      this.upsertBlackout = null;
+      return;
+    }
+
+    const sourceId = event?.sourceId?._id ?? event?.sourceId;
+    delete event.createdAt;
+    delete event.updatedAt;
+
+    if (sourceId === this.selectedAsset._id) {
+      const merged = { ...event, sourceId };
+      const prevId = this.upsertBlackout?._id;
+      if (prevId) {
+        this.removeBlackoutIdFromMap(prevId);
+      }
+      this.setBlackoutRangeInMap(merged);
+      this.syncSlotBlackoutsFromMap();
+    } else if (this.upsertBlackout?._id) {
+      this.removeBlackoutIdFromMap(this.upsertBlackout._id);
+      this.syncSlotBlackoutsFromMap();
+    }
+
+    this._coreService.modal.close(this.upsertBlackoutModalId);
+    this.upsertBlackout = null;
+  }
+
+  protected readonly deleteBlackoutModalId = 'delete-blackout-date-modal';
+  protected blackoutDeleteData: any = null;
+  protected openBlackoutDeleteModal(data: any): void {
+    if (data?.sourceId !== this.selectedAsset._id) return;
+
+    this.blackoutDeleteData = {
+      ...data,
+      sourceId: {
+        _id: this.selectedAsset._id,
+        title: this.selectedAsset.title
+      },
+      propertyTitle: this.selectedAsset?.propertyTitle ?? ''
+    };
+    this._coreService.modal.open(this.deleteBlackoutModalId);
+  }
+
+  protected blackoutDeleteCloseEvent(event: any): void {
+    if (event && this.blackoutDeleteData?._id) {
+      this.removeBlackoutIdFromMap(this.blackoutDeleteData._id);
+      this.syncSlotBlackoutsFromMap();
+    }
+
+    this.blackoutDeleteData = null;
+    this._coreService.modal.close(this.deleteBlackoutModalId);
+  }
+
+  /** Club orders use credits instead of currency amounts. */
+  protected formatCredits(value: number | null | undefined): string {
+    if (value == null || Number.isNaN(value)) {
+      return '0 credits';
+    }
+    const credits = Number(value);
+    return `${credits} credit${credits === 1 ? '' : 's'}`;
   }
 
 
@@ -465,7 +854,7 @@ export class Calendar implements OnDestroy {
   protected nextAssetImage(): void {
     const len = this.selectedAssetImages.length;
     if (len === 0) return;
-    this.assetImageIndex = (this.assetImageIndex + 1) % len;
+    this.assetImageIndex = (this.assetImageIndex + 1 + len) % len;
   }
 
 

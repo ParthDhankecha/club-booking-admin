@@ -1,16 +1,21 @@
 import { HttpErrorResponse, HttpHeaders, HttpParams, HttpClient as _HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, Observable, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class HttpClient {
+
   private readonly _http = inject(_HttpClient);
-  private readonly baseUrl = 'https://sahyadriresort.com/api/club/admin';
+  private readonly _baseUrl = 'https://qa.sahyadriresort.com/api/club/admin';
 
 
+  protected readonly middlePath: string = '/admin';
+  private get baseUrl(): string {
+    return `${this._baseUrl}${this.middlePath}`;
+  }
 
   /**
    * Generate HTTP options
@@ -55,8 +60,9 @@ export class HttpClient {
    * @param params Query params
    */
   get<T>(endpoint: string, params?: Record<string, string | number>): Observable<T> {
-    return this._http
-      .get<T>(`${this.baseUrl}${endpoint}`, { ...this.httpOptions({ params }) })
+    return this._http.get<T>(`${this.baseUrl}${endpoint}`, {
+      ...this.httpOptions({ params })
+    })
     // .pipe(catchError(this.handleError));
   }
 
@@ -69,10 +75,9 @@ export class HttpClient {
    * @param options.params Additional query params
    */
   post<T>(endpoint: string, data: any, { multipart = false, params = {} } = {}): Observable<T> {
-    return this._http
-      .post<T>(`${this.baseUrl}${endpoint}`, data, {
-        ...this.httpOptions({ multipart, params })
-      })
+    return this._http.post<T>(`${this.baseUrl}${endpoint}`, data, {
+      ...this.httpOptions({ multipart, params })
+    })
     // .pipe(catchError(this.handleError));
   }
 
@@ -85,10 +90,9 @@ export class HttpClient {
    * @param options.params Additional query params
    */
   put<T>(endpoint: string, data: any, { multipart = false, params = {} } = {}): Observable<T> {
-    return this._http
-      .put<T>(`${this.baseUrl}${endpoint}`, data, {
-        ...this.httpOptions({ multipart, params })
-      })
+    return this._http.put<T>(`${this.baseUrl}${endpoint}`, data, {
+      ...this.httpOptions({ multipart, params })
+    })
     // .pipe(catchError(this.handleError));
   }
 
@@ -101,10 +105,9 @@ export class HttpClient {
    * @param options.params Additional query params
    */
   patch<T>(endpoint: string, data: any, { multipart = false, params = {} } = {}): Observable<T> {
-    return this._http
-      .patch<T>(`${this.baseUrl}${endpoint}`, data, {
-        ...this.httpOptions({ multipart, params })
-      })
+    return this._http.patch<T>(`${this.baseUrl}${endpoint}`, data, {
+      ...this.httpOptions({ multipart, params })
+    })
     // .pipe(catchError(this.handleError));
   }
 
@@ -113,10 +116,9 @@ export class HttpClient {
    * @param endpoint API endpoint
    */
   delete<T>(endpoint: string): Observable<T> {
-    return this._http
-      .delete<T>(`${this.baseUrl}${endpoint}`, {
-        ...this.httpOptions({})
-      })
+    return this._http.delete<T>(`${this.baseUrl}${endpoint}`, {
+      ...this.httpOptions({})
+    })
     // .pipe(catchError(this.handleError));
   }
 }

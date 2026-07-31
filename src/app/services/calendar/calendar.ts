@@ -6,13 +6,13 @@ import { IResponse } from '@src/app/models/http-response.model';
 import { API_ENDPOINTS } from '@src/app/constants/api-endpoints';
 
 export interface ICalendarViewRequest {
-  assetId: string;
-  view: 'weekly' | 'monthly';
+  assetId?: string;
+  view: 'weekly' | 'monthly' | 'full-day';
   date: string; // YYYY-MM-DD
 }
 
 export type CalendarDetailsPayload =
-  | { type: 'date'; date: string; assetId: string }
+  | { type: 'date'; date: string; assetId?: string }
   | { type: 'order'; orderId: string };
 
 @Injectable({

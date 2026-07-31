@@ -1,0 +1,52 @@
+<div class="modal d-block">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">
+                    Delete Blackout Date
+                </h1>
+                <button type="button" class="btn-close" (click)="closeDelete()"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3 text-center">
+                    Are you sure you want to delete it?
+                </p>
+                <table class="table table-striped table-hover table-sm">
+                    <tbody>
+                        <tr>
+                            <th>Asset</th>
+                            <td class="text-capitalize">
+                                {{deleteData?.sourceId?.title}}
+                                @if(deleteData.propertyTitle !== ''){
+                                ({{deleteData.propertyTitle}})
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Date(s)</th>
+                            <td>
+                                {{ deleteData?.startDate | date:'yyyy-MM-dd' }}
+                                @if (deleteData?.endDate){
+                                <span class="text-muted"> to </span>
+                                {{deleteData?.endDate | date:'yyyy-MM-dd'}}
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Reason</th>
+                            <td>{{ deleteData?.reason || '-' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary me-3" (click)="closeDelete()">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-danger" [disabled]="isReqAlive" (click)="confirmDelete()">
+                    Confirm Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

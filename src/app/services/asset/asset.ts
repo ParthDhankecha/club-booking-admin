@@ -30,7 +30,7 @@ export class Asset {
     return this._http.post(this._ENDPOINTS.CONFIGURATION, body);
   }
 
-  masterData(body: { optionsList?: any, calendarList?: any }): Observable<IResponse> {
+  masterData(body: { optionsList?: any, calendarList?: any, blackoutDate?: boolean }): Observable<IResponse> {
     return this._http.post(this._ENDPOINTS.MASTER_DATA, body);
   }
 

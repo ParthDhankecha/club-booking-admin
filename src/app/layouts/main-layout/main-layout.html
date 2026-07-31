@@ -41,7 +41,7 @@
                 </div>
                 <!-- Navigation Menu -->
                 <ul class="nav-menu-wrapper">
-                    @for(item of sidebarRoutes; track item){
+                    @for(item of sidebarRoutes; track item.link;){
                     <li class="menu-item rounded" routerLinkActive="bg-primary">
                         <a class="text-decoration-none text-dark" routerLink="{{item.link}}">
                             <div class="d-flex gap-2 align-items-center py-2 px-3" routerLinkActive="text-white">

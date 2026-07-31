@@ -37,6 +37,7 @@ export class Resort {
   protected readonly facilitiesAndStatsModalId = 'upsert-resort-facilities-stats-modal';
   protected readonly metadataModalId = 'upsert-resort-metadata-modal';
   protected readonly deleteResortModalId = 'delete-resort-modal';
+  protected readonly changeResortStatusModalId = 'change-resort-status-modal';
 
   protected resorts: any[] = [];
   protected isReqAlive = false;
@@ -141,7 +142,10 @@ export class Resort {
       } else {
         const i = this.resorts.findIndex((c) => c._id === event._id);
         if (i !== -1) {
-          this.resorts[i] = event;
+          this.resorts[i] = {
+            ...this.resorts[i],
+            ...event
+          };
         } else {
           this.loadList();
         }
@@ -175,6 +179,43 @@ export class Resort {
           const msg = res.message || 'Something went wrong. Please try again later';
           this._coreService.utils.showToaster(EToasterType.Danger, msg);
           this.onDeleteResortCancel();
+        }
+      },
+      error: (err: any) => {
+        this.isReqAlive = false;
+        const msg = err?.error?.message || 'Something went wrong. Please try again later';
+        this._coreService.utils.showToaster(EToasterType.Danger, msg);
+      }
+    });
+  }
+
+
+  protected onChangeResortStatus(resort: any): void {
+    this.resortData = resort;
+    this._coreService.modal.open(this.changeResortStatusModalId);
+  }
+
+  protected onChangeResortStatusCancel(): void {
+    this.resortData = null;
+    this._coreService.modal.close(this.changeResortStatusModalId);
+  }
+
+  protected onConfirmChangeResortStatus(): void {
+    if (!this.resortData || this.isReqAlive) return;
+
+    this.isReqAlive = true;
+    this._apiFs.resort.changeStatus(this.resortData._id, { isPublished: !this.resortData.isPublished }).subscribe({
+      next: (res: IResponse) => {
+        this.isReqAlive = false;
+        if (res.code === 'UPDATED') {
+          this._coreService.utils.showToaster(EToasterType.Success, 'Resort status changed successfully');
+          const i = this.resorts.findIndex((r) => r._id === this.resortData._id);
+          if (i !== -1) {
+            this.resorts[i] = res.data;
+          } else {
+            this.loadList();
+          }
+          this.onChangeResortStatusCancel();
         }
       },
       error: (err: any) => {

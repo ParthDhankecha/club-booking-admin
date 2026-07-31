@@ -1,0 +1,114 @@
+<div class="d-flex gap-2 justify-content-between">
+    <h4 class="mb-3">
+        Blackout Dates
+    </h4>
+</div>
+
+<div class="bg-white rounded-3 shadow p-2 pt-3">
+    <div class="mb-3 d-flex gap-2 justify-content-between flex-wrap">
+        <div class="d-flex gap-2 align-items-center flex-wrap flex-grow-1">
+            <app-common-dropdown [selectedOption]="selectedResort" [optionsList]="resortList" placeholder="All resorts"
+                [filterKeys]="['title']" displayKey1="title" (onSelect)="onResortFilterSelected($event)" />
+
+            <app-common-dropdown [selectedOption]="selectedAsset" [optionsList]="assetList" placeholder="Select asset"
+                [filterKeys]="['title','propertyTitle']" displayKey1="title" displayKey2="propertyTitle"
+                (onSelect)="onAssetSelected($event)" />
+        </div>
+
+        <div class="align-self-center">
+            <button class="btn btn-outline-primary" (click)="openCreate()">
+                + Add New
+            </button>
+        </div>
+    </div>
+
+    @if(!selectedAsset?._id){
+    <div class="text-center text-muted py-4">
+        Select an asset to view blackout dates.
+    </div>
+    }
+
+    <!-- Loader -->
+    @if(loading){
+    <div class="text-center py-4">
+        <div class="spinner-border text-primary"></div>
+    </div>
+    }
+
+    <!-- Table -->
+    @if(!loading && selectedAsset?._id){
+    <div class="table-responsive-xl">
+        <table class="table table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    @if(isAllAssetsSelected){
+                    <th>Asset</th>
+                    }
+                    <th>Date(s)</th>
+                    <th>Reason</th>
+                    <th class="text-center w-1-percent">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (item of blackoutDates; track item._id; let i = $index;) {
+                <tr>
+                    <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+                    @if(isAllAssetsSelected){
+                    <td class="text-capitalize">
+                        {{ item?.sourceId?.title || '-' }}
+                    </td>
+                    }
+                    <td>
+                        {{item?.startDate | date:'yyyy-MM-dd'}}
+                        @if (item?.endDate){
+                        <span class="text-muted"> to </span>
+                        {{item?.endDate | date:'yyyy-MM-dd'}}
+                        }
+                    </td>
+                    <td>{{ item?.reason || '-' }}</td>
+                    <td>
+                        <div class="d-flex gap-2 align-items-center">
+                            <button class="btn btn-outline-dark btn-sm" (click)="openEdit(item)">
+                                Edit
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" (click)="openDelete(item)">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                }@empty{
+                <tr>
+                    <td [attr.colspan]="isAllAssetsSelected ? 5 : 4" class="text-center">
+                        No blackout dates found
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <app-pagination [totalPages]="totalPages" [totalEntries]="totalEntries" [currentPage]="currentPage"
+        [pageSize]="pageSize" (pageChange)="onPageChange($event)" />
+    }
+</div>
+
+
+
+<!-- Upsert Modal -->
+<app-modal-layer [appRegisterModalLayer]="upsertModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(upsertModalId)) {
+    <app-upsert-blackout-date [selectedAsset]="selectedAsset" [assetList]="rawAssetList" [data]="upsertData"
+        (upsert)="blackoutUpsertEvent($event)" />
+    }
+</app-modal-layer>
+
+<!-- Delete Modal -->
+<app-modal-layer [appRegisterModalLayer]="deleteModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(deleteModalId)) {
+    <app-remove-blackout-date [data]="deleteData" (close)="blackoutDeleteCloseEvent($event)" />
+    }
+</app-modal-layer>

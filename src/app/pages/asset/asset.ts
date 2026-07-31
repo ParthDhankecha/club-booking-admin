@@ -112,7 +112,7 @@ export class Asset {
   }
 
   protected selectedProperty: any = null;
-  protected searchProperty: string = '';
+  protected searchInput: string = '';
   protected onPropertySelected(property: any): void {
     this.selectedProperty = property || null;
   }
@@ -124,7 +124,7 @@ export class Asset {
   protected onClearFilters(): void {
     this.selectedResort = null;
     this.selectedProperty = null;
-    this.searchProperty = '';
+    this.searchInput = '';
     this.propertyList = [...this._propertyList];
     this.currentPage = 1;
     this.getAssets();
@@ -138,9 +138,9 @@ export class Asset {
       limit: this.pageSize,
       filters: null,
     };
-    if (this.selectedProperty?._id || this.searchProperty?.trim() || this.selectedResort?._id) {
+    if (this.selectedProperty?._id || this.searchInput?.trim() || this.selectedResort?._id) {
       payload.filters = {
-        ...(this.searchProperty?.trim() && { search: this.searchProperty?.trim() }),
+        ...(this.searchInput?.trim() && { search: this.searchInput?.trim() }),
         ...(this.selectedProperty?._id && { propertyId: this.selectedProperty?._id }),
         ...(this.selectedResort?._id && { resortId: this.selectedResort._id }),
       };
@@ -207,7 +207,10 @@ export class Asset {
           this._coreService.utils.showToaster(EToasterType.Success, 'Asset status changed successfully');
           const index = this.assets.findIndex(a => a._id === this.assetData._id);
           if (index !== -1) {
-            this.assets[index] = res.data;
+            this.assets[index] = {
+              ...this.assets[index],
+              ...res.data
+            };
           }
           this.onChangeAssetStatusCancel();
         }

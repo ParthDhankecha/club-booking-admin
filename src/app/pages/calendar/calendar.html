@@ -5,10 +5,27 @@
     </h4>
 
     <div class="d-flex flex-wrap gap-3 align-items-center">
+      <button type="button" class="calendar-nav-btn calendar-nav-btn-refresh" (click)="refreshCalendar()"
+        [disabled]="loading" [class.calendar-nav-btn-spinning]="loading" title="Refresh calendar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
+          <path
+            d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
+        </svg>
+      </button>
+
+      <button type="button" class="calendar-nav-btn calendar-nav-btn-auto-refresh"
+        [class.calendar-nav-btn-auto-refresh-active]="autoRefreshEnabled" (click)="toggleAutoRefresh()"
+        [title]="autoRefreshTitle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z" />
+          <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z" />
+        </svg>
+      </button>
+
       <app-common-dropdown [selectedOption]="selectedAsset" [optionsList]="assetList" placeholder="Select asset"
         [filterKeys]="['title', 'propertyTitle']" displayKey1="title" displayKey2="propertyTitle"
-        [enableSameSelectRemove]="true" (onSelect)="onAssetSelected($event)">
-      </app-common-dropdown>
+        listWrapClass="dropdown-list-wrap" [enableSameSelectRemove]="true" (onSelect)="onAssetSelected($event)" />
 
       @if (selectedAsset && hasAssetImages) {
       <div class="calendar-asset-thumbs">
@@ -26,18 +43,7 @@
     </div>
   </div>
 
-  @if (!selectedAsset) {
-  <div class="calendar-placeholder">
-    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="opacity-25 mb-3"
-      viewBox="0 0 16 16">
-      <path
-        d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
-    </svg>
-    <p class="mb-0 fs-6">
-      Select an asset to view its booking calendar
-    </p>
-  </div>
-  } @else if (loading) {
+  @if (loading) {
   <div class="calendar-loading">
     <div class="spinner-border text-primary" role="status"></div>
     <p class="mt-2 mb-0 text-muted small">
@@ -45,7 +51,8 @@
     </p>
   </div>
   } @else if (calendarData && daySlots.length) {
-  <div class="calendar-card" [class.calendar-grid-month]="viewType === 'monthly'">
+  <div class="calendar-card" [class.calendar-grid-month]="viewType === 'monthly'"
+    [class.calendar-card-full-day]="isAllAssetsMode">
     <div class="calendar-range-header">
       <div class="calendar-nav">
         <button type="button" class="calendar-nav-btn" (click)="prevPeriod()">
@@ -65,12 +72,13 @@
         </button>
       </div>
       <span class="calendar-range-header-label">
-        @if (viewType === 'weekly') {
+        @if (!isAllAssetsMode && viewType === 'weekly') {
         {{ weekStart | date:'d MMM' }} – {{ weekEnd | date:'d MMM yyyy' }}
         } @else {
-        {{ monthYearLabel }}
+        {{ isAllAssetsMode ? fullDayDateLabel : monthYearLabel }}
         }
       </span>
+      @if (!isAllAssetsMode) {
       <div class="calendar-view-toggle">
         <button type="button" class="calendar-view-tab" (click)="setViewType('weekly')"
           [class.calendar-view-tab-active]="viewType === 'weekly'">
@@ -81,8 +89,138 @@
           Month
         </button>
       </div>
+      } @else {
+      <span class="calendar-all-assets-label">
+        All assets
+      </span>
+      }
     </div>
 
+    @if (isAllAssetsMode) {
+    <div class="calendar-full-day">
+      @if (fullDayAssetRows.length > 0) {
+      <div class="calendar-full-day-board">
+        @for (row of fullDayAssetRows; track row.assetId) {
+        <div class="calendar-full-day-row-label">
+          <span class="calendar-full-day-row-title">
+            {{ row.assetTitle }}
+          </span>
+          <div class="calendar-full-day-row-counts">
+            <span class="calendar-full-day-row-count">
+              Bookings: {{ row.bookingCount }}
+            </span>
+            <span class="calendar-full-day-row-count">
+              In queue: {{ row.queueCount }}
+            </span>
+          </div>
+        </div>
+        <div class="calendar-full-day-row-cards-row">
+          <div class="calendar-full-day-row-cards">
+            @for (item of row.items; track fullDayItemTrack(item, idx); let idx = $index;) {
+            <article class="calendar-full-day-entry {{ 'entry-' + (item.status || 'queue') }}"
+              (click)="openOrderDetailsModal(item.orderId)">
+              <div class="calendar-full-day-entry-head">
+                <div class="calendar-full-day-entry-title">
+                  @if (item.kind === 'order') {
+                  Order #{{ item.orderNo }}
+                  } @else {
+                  #{{ item.uid ?? 'In queue' }}
+                  }
+                </div>
+              </div>
+              <div class="calendar-full-day-entry-meta">
+                <span class="calendar-full-day-meta-item">
+                  <span class="calendar-details-meta-label">
+                    Units
+                  </span>
+                  <span>
+                    {{ item.units }}
+                  </span>
+                </span>
+                @if (item.adults != null && item.adults > 0) {
+                <span class="calendar-full-day-meta-item">
+                  <span class="calendar-details-meta-label">
+                    Adults
+                  </span>
+                  <span>
+                    {{ item.adults }}
+                  </span>
+                </span>
+                }
+                @if (guestTypeLabel(item.guest); as guestType) {
+                <span class="calendar-full-day-meta-item">
+                  <span class="calendar-details-meta-label">
+                    Booking for
+                  </span>
+                  <span>
+                    {{ guestType }}
+                  </span>
+                </span>
+                }
+                @if (formatLineKids(item.kids); as kidsLabel) {
+                <span class="calendar-full-day-meta-item">
+                  <span class="calendar-details-meta-label">
+                    Kids
+                  </span>
+                  <span>
+                    {{ kidsLabel }}
+                  </span>
+                </span>
+                }
+                @if ((item?.guest?.guestName ?? item?.guest?.fullname); as guestName) {
+                <span class="calendar-full-day-meta-item">
+                  <span class="calendar-details-meta-label">
+                    Guest
+                  </span>
+                  <span class="text-capitalize">
+                    {{ guestName }}
+                  </span>
+                </span>
+                }
+                @if ((item?.guest?.mobile ?? item?.guest?.phone); as guestPhone) {
+                <span class="calendar-full-day-meta-item">
+                  <span class="calendar-details-meta-label">
+                    Phone
+                  </span>
+                  <span>
+                    {{ guestPhone }}
+                  </span>
+                </span>
+                }
+                @if (item?.guest?.emergencyContact; as emergencyContact) {
+                <span class="calendar-full-day-meta-item">
+                  <span class="calendar-details-meta-label">
+                    Emergency
+                  </span>
+                  <span>
+                    {{ emergencyContact }}
+                  </span>
+                </span>
+                }
+              </div>
+            </article>
+            }
+            @if (row.items.length === 0) {
+            <span class="calendar-full-day-row-empty">
+              No bookings or items in queue
+            </span>
+            }
+          </div>
+        </div>
+        }
+      </div>
+      } @else {
+      <div class="calendar-full-day-empty">
+        <span class="calendar-details-empty-icon" aria-hidden="true">
+          📭
+        </span>
+        <p>
+          No bookings or items in queue for this day.
+        </p>
+      </div>
+      }
+    </div>
+    } @else {
     <div class="calendar-grid">
       <div class="calendar-row calendar-row-head">
         <div class="calendar-cell calendar-cell-head">Mon</div>
@@ -97,8 +235,16 @@
       <div class="calendar-row calendar-row-body">
         @for (slot of daySlots; track slot.date; let idx = $index;) {
         <div class="calendar-cell calendar-cell-body" [class.calendar-cell-today]="slot.isToday"
-          [class.calendar-cell-stay-full]="isStayFull(slot)" [class.calendar-cell-other-month]="slot.isOtherMonth">
+          [class.calendar-cell-stay-full]="isStayFull(slot)" [class.calendar-cell-other-month]="slot.isOtherMonth"
+          [class.blackout-cell]="!!slot?.blackout">
           <div class="calendar-cell-inner">
+            @if (!!slot?.blackout){
+            <div class="blackout-date">
+              <span class="blackout-label">
+                Unavailable
+              </span>
+            </div>
+            }
             <div class="calendar-cell-header">
               <span class="calendar-bar-label calendar-bar-label-header"
                 [class.calendar-bar-label-header-full]="slot.totalQuantity > 0 && usedUnits(slot) >= slot.totalQuantity">
@@ -141,6 +287,31 @@
                   (click)="$event.stopPropagation(); openDetailsByDate(slot)">
                   View
                 </button>
+                <div class="more-options-wrap" (click)="$event.stopPropagation();">
+                  <button type="button" class="more-option-wrap" (click)="toggleMoreOption(idx)">
+                    <svg width="18" height="18" viewBox="0 0 122.88 122.88" xmlns="http://www.w3.org/2000/svg"
+                      fill="currentColor" class="more-option-icon">
+                      <path
+                        d="M61.44,0c16.96,0,32.33,6.88,43.44,18c11.12,11.12,18,26.48,18,43.44s-6.88,32.33-18,43.44c-11.12,11.12-26.48,18-43.44,18 c-16.96,0-32.33-6.88-43.44-18C6.88,93.77,0,78.41,0,61.44C0,44.48,6.88,29.12,18,18C29.11,6.88,44.47,0,61.44,0L61.44,0z M61.44,92.3c-3.99,0-7.23-3.24-7.23-7.22s3.24-7.22,7.23-7.22c3.99,0,7.23,3.24,7.23,7.22C68.67,89.07,65.43,92.3,61.44,92.3 L61.44,92.3L61.44,92.3z M61.44,43.99c-3.99,0-7.23-3.23-7.23-7.22c0-3.99,3.24-7.22,7.23-7.22c3.99,0,7.23,3.23,7.23,7.22 S65.43,43.99,61.44,43.99L61.44,43.99L61.44,43.99z M61.44,68.15c-3.99,0-7.23-3.24-7.23-7.22c0-3.99,3.24-7.22,7.23-7.22 c3.99,0,7.23,3.24,7.23,7.22C68.67,64.91,65.43,68.15,61.44,68.15L61.44,68.15L61.44,68.15z M97.67,25.2 C88.4,15.93,75.59,10.2,61.44,10.2c-14.15,0-26.96,5.74-36.23,15.01C15.93,34.48,10.2,47.29,10.2,61.44 c0,14.15,5.74,26.96,15.01,36.24c9.27,9.27,22.08,15.01,36.24,15.01s26.96-5.74,36.23-15.01c9.27-9.27,15.01-22.08,15.01-36.24 C112.68,47.29,106.95,34.48,97.67,25.2L97.67,25.2z" />
+                    </svg>
+                  </button>
+                  @if (idx === moreOptionIndex) {
+                  <ul class="more-options">
+                    @if (!slot?.blackout) {
+                    <li class="more-option text-primary" (click)="onUpsertBlackoutMenu(slot);">
+                      add blackout
+                    </li>
+                    }@else {
+                    <li class="more-option text-primary" (click)="onUpsertBlackoutMenu(slot);">
+                      edit blackout
+                    </li>
+                    <li class="more-option text-primary" (click)="openBlackoutDeleteModal(slot.blackout);">
+                      delete blackout
+                    </li>
+                    }
+                  </ul>
+                  }
+                </div>
               </div>
               }
             </div>
@@ -149,18 +320,25 @@
         }
       </div>
     </div>
+    }
   </div>
 
   <!-- Legend for the calendar -->
   <div class="calendar-legend">
-    <span class="legend-item"><span class="legend-dot legend-dot-booked"></span> Booked</span>
-    <span class="legend-item"><span class="legend-dot legend-dot-pending"></span> Processing</span>
-    <span class="legend-item"><span class="legend-dot legend-dot-basket"></span> In queue</span>
+    <span class="legend-item">
+      <span class="legend-dot legend-dot-booked"></span> Booked
+    </span>
+    <span class="legend-item">
+      <span class="legend-dot legend-dot-pending"></span> Processing
+    </span>
+    <span class="legend-item">
+      <span class="legend-dot legend-dot-basket"></span> In queue
+    </span>
   </div>
-  } @else if (selectedAsset && !loading) {
+  } @else if (!loading) {
   <div class="calendar-placeholder calendar-placeholder-empty">
     <p class="mb-0">
-      No data for this {{ viewType === 'weekly' ? 'week' : 'month' }}.
+      No data for this {{ isAllAssetsMode ? 'day' : (viewType === 'weekly' ? 'week' : 'month') }}.
     </p>
   </div>
   }
@@ -229,7 +407,7 @@
     }
   </app-modal-layer>
 
-  <!-- Calendar details popup modal -->
+  <!-- Calendar details popup -->
   <app-modal-layer [appRegisterModalLayer]="calendarDetailsModalId" bgLayer="bg-gray-light">
     @if (_coreService.modal.isOpen(calendarDetailsModalId)) {
     <div class="modal d-block calendar-details-modal-wrap">
@@ -242,7 +420,7 @@
               Booking details{{ detailsData?.date ? (' – ' + (detailsData.date | date:'fullDate')) : '' }}
               } @else {
               <span class="calendar-details-modal-title-icon" aria-hidden="true">📋</span>
-              {{ detailsData?.orderNo != null ? ('Order #' + detailsData.orderNo) : 'Order details' }}
+              {{ 'Order #' + (detailsData?.orderNo ?? '?') }}
               }
             </h2>
             <button type="button" class="calendar-details-modal-close" (click)="closeDetails()" aria-label="Close">
@@ -265,67 +443,141 @@
                 <h3 class="calendar-details-section-title">
                   <span class="calendar-details-section-dot calendar-details-section-dot-booked"></span>
                   Bookings
+                  <span class="badge bg-secondary rounded-pill px-2 py-1">
+                    {{ detailsData.bookings.length }}
+                  </span>
                 </h3>
-                <div class="calendar-details-cards">
+                <div class="calendar-details-date-orders">
                   @for (order of detailsData.bookings; track order.orderId) {
-                  <article class="calendar-details-card calendar-details-card-booking">
-                    <div class="calendar-details-card-head">
-                      <span class="calendar-details-card-order">
-                        Order #{{ order.orderNo }}
-                      </span>
-                      <span class="calendar-details-badge"
-                        [class.calendar-details-badge-success]="order.status === 'success'"
-                        [class.calendar-details-badge-pending]="order.status === 'pending'">
-                        {{order.status}}
-                      </span>
+                  <article class="calendar-details-date-order">
+                    <div class="calendar-details-date-order-head">
+                      <div class="calendar-details-date-order-title">
+                        <span class="calendar-details-card-order">
+                          Order #{{ order.orderNo }}
+                        </span>
+                        <span class="calendar-details-badge {{'calendar-details-badge-' + order.status}}">
+                          {{ order.status }}
+                        </span>
+                      </div>
+                      @if (order.orderId) {
+                      <button type="button" class="calendar-details-view-order-btn"
+                        (click)="openDetailsByOrderId(order.orderId)">
+                        View full order
+                      </button>
+                      }
                     </div>
-                    <div class="calendar-details-card-meta">
-                      <span class="calendar-details-meta-item">
-                        <span class="calendar-details-meta-label">Order date</span>
-                        <span>{{ order.orderDate | date:'mediumDate' }}</span>
-                      </span>
-                      <span class="calendar-details-meta-item calendar-details-meta-amount">
-                        <span class="calendar-details-meta-label">Amount</span>
-                        <span>{{ order.amountToPay | currency:'INR' }}</span>
-                      </span>
-                    </div>
-                    @for (item of order.lineItems; track $index) {
-                    <div class="calendar-details-guest-block">
-                      <span class="calendar-details-guest-name">
-                        {{ item.guestDetails?.guestName ?? 'Guest' }}
-                      </span>
-                      <span class="calendar-details-guest-dates">
-                        {{item.startDate|date:'shortDate'}} – {{item.endDate|date:'shortDate'}}
-                      </span>
-                      <span class="calendar-details-guest-units">
-                        {{ item.units }} unit(s) · {{item.amountToPay|currency:'INR'}}
-                      </span>
-                      @if (item.guestDetails) {
-                      <div class="calendar-details-guest-full">
-                        @if (item.guestDetails.email) {
-                        <span class="calendar-details-detail-row">
-                          <span class="calendar-details-meta-label">Email</span>
-                          <a [href]="'mailto:' + item.guestDetails.email">
-                            {{item.guestDetails.email}}
-                          </a>
-                        </span>
-                        }
-                        @if (item.guestDetails.phone) {
-                        <span class="calendar-details-detail-row">
-                          <span class="calendar-details-meta-label">Phone</span>
-                          <a [href]="'tel:' + item.guestDetails.phone">
-                            {{item.guestDetails.phone}}
-                          </a>
-                        </span>
-                        }
-                        @if (item.guestDetails.address) {
-                        <span class="calendar-details-detail-row">
-                          <span class="calendar-details-meta-label">Address</span>
-                          {{ item.guestDetails.address }}
-                        </span>
-                        }
+
+                    <div class="calendar-details-order-overview full-day-order-overview">
+                      <div class="calendar-details-order-panel">
+                        <div class="calendar-details-meta-item">
+                          <span class="calendar-details-meta-label">
+                            Order date
+                          </span>
+                          <span class="calendar-details-meta-value">
+                            {{ order.orderDate | date:'mediumDate' }}
+                          </span>
+                        </div>
+                        <!-- <div class="calendar-details-meta-item calendar-details-meta-item-end">
+                          <span class="calendar-details-meta-label">
+                            Credits Used
+                          </span>
+                          <span class="calendar-details-meta-value">
+                            {{ formatCredits(order?.creditsUsed) }}
+                          </span>
+                        </div> -->
+                      </div>
+
+                      @if (order.user; as customer) {
+                      <div class="calendar-details-order-panel">
+                        <div class="calendar-details-customer-header">
+                          <span class="calendar-details-customer-avatar" aria-hidden="true">
+                            {{ (customer.fullname || '?').charAt(0).toUpperCase() }}
+                          </span>
+                          <div class="calendar-details-customer-identity">
+                            <span class="calendar-details-meta-label">
+                              Customer
+                            </span>
+                            <span class="calendar-details-customer-name text-capitalize">
+                              {{ customer.fullname ?? 'Guest' }}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                       }
+                    </div>
+
+                    @if ((order.lineItems?.length ?? 0) > 0) {
+                    <div class="calendar-details-date-line-items">
+                      <span class="calendar-details-meta-label">
+                        Stays on this day
+                      </span>
+                      <div class="calendar-details-cards">
+                        @for (item of order.lineItems; track item._id ?? $index) {
+                        <article class="calendar-details-card calendar-details-card-line">
+                          <div class="calendar-details-card-head">
+                            <span class="text-capitalize calendar-details-line-asset">
+                              {{ item.asset?.title ?? item.assetId?.title ?? 'Stay' }}
+                            </span>
+                            <span class="calendar-details-line-price">
+                              <span class="calendar-details-line-amount">
+                                {{ formatCredits(item?.credit?.used) }}
+                              </span>
+                            </span>
+                          </div>
+                          <div class="calendar-details-card-meta calendar-details-line-meta">
+                            <span class="calendar-details-meta-item">
+                              <span class="calendar-details-meta-label">
+                                Check-in
+                              </span>
+                              <span>{{ item.startDate | date:'mediumDate' }}</span>
+                            </span>
+                            <span class="calendar-details-meta-item">
+                              <span class="calendar-details-meta-label">
+                                Check-out
+                              </span>
+                              <span>{{ item.endDate | date:'mediumDate' }}</span>
+                            </span>
+                            <span class="calendar-details-meta-item">
+                              <span class="calendar-details-meta-label">
+                                Units
+                              </span>
+                              <span>{{ item.units }}</span>
+                            </span>
+                            <span class="calendar-details-meta-item">
+                              <span class="calendar-details-meta-label">
+                                Guests
+                              </span>
+                              <span>
+                                {{ item.adults ?? 0 }} adult{{ (item.adults ?? 0) === 1 ? '' : 's' }}
+                                @if (formatLineKids(item.kids); as kidsLabel) {
+                                <span class="calendar-details-line-kids"> · {{ kidsLabel }}</span>
+                                }
+                              </span>
+                            </span>
+                            @if (item.mealPlan) {
+                            <span class="calendar-details-meta-item">
+                              <span class="calendar-details-meta-label">
+                                Meal plan
+                              </span>
+                              <span class="text-capitalize">
+                                {{ item.mealPlan }}
+                              </span>
+                            </span>
+                            }
+                            @if (item.guestName) {
+                            <span class="calendar-details-meta-item">
+                              <span class="calendar-details-meta-label">
+                                Booking for
+                              </span>
+                              <span class="text-capitalize">
+                                {{ item.guestName }}
+                              </span>
+                            </span>
+                            }
+                          </div>
+                        </article>
+                        }
+                      </div>
                     </div>
                     }
                   </article>
@@ -342,41 +594,83 @@
                 <div class="calendar-details-cards">
                   @for (item of detailsData.basketItems; track item.uid) {
                   <article class="calendar-details-card calendar-details-card-queue">
-                    <span class="calendar-details-guest-name">
-                      {{item.guest?.guestName ?? 'Guest' }}
-                    </span>
-                    <span class="calendar-details-guest-dates">
-                      {{item.startDate|date:'shortDate'}} – {{item.endDate|date:'shortDate'}}
-                    </span>
-                    <span class="calendar-details-guest-units">
-                      {{item.units }} unit(s)
-                    </span>
-                    @if (item.guest) {
-                    <div class="calendar-details-guest-full">
-                      @if (item.guest.email) {
-                      <span class="calendar-details-detail-row">
-                        <span class="calendar-details-meta-label">Email</span>
-                        <a [href]="'mailto:' + item.guest.email">
-                          {{item.guest.email}}
+                    <div class="calendar-details-card-head">
+                      <span class="calendar-details-guest-name text-capitalize">
+                        {{ item.guest?.guestName ?? 'Self' }}
+                      </span>
+                      @if (guestTypeLabel(item.guest); as guestType) {
+                      <span class="calendar-details-badge calendar-details-badge-pending">
+                        {{ guestType }}
+                      </span>
+                      }
+                    </div>
+
+                    <div class="calendar-details-card-meta calendar-details-line-meta">
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Check-In
+                        </span>
+                        <span>
+                          {{ item.startDate | date:'mediumDate' }}
+                        </span>
+                      </span>
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Check-Out
+                        </span>
+                        <span>
+                          {{ item.endDate | date:'mediumDate' }}
+                        </span>
+                      </span>
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Units
+                        </span>
+                        <span>
+                          {{ item.units }}
+                        </span>
+                      </span>
+                      @if (item.data?.adults != null && item.data.adults > 0) {
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Adults
+                        </span>
+                        <span>
+                          {{ item.data.adults }}
+                        </span>
+                      </span>
+                      }
+                      @if (formatLineKids(item.data?.kids); as kidsLabel) {
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Kids
+                        </span>
+                        <span>
+                          {{ kidsLabel }}
+                        </span>
+                      </span>
+                      }
+                      @if ((item?.guest?.mobile ?? item?.guest?.phone); as guestPhone) {
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Phone
+                        </span>
+                        <a href="tel:{{ guestPhone }}">
+                          {{ guestPhone }}
                         </a>
                       </span>
                       }
-                      @if (item.guest.phone) {
-                      <span class="calendar-details-detail-row">
-                        <span class="calendar-details-meta-label">Phone</span>
-                        <a [href]="'tel:' + item.guest.phone">
-                          {{item.guest.phone }}
+                      @if (item?.guest?.emergencyContact; as emergencyContact) {
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Emergency
+                        </span>
+                        <a href="tel:{{ emergencyContact }}">
+                          {{ emergencyContact }}
                         </a>
                       </span>
                       }
                     </div>
-                    }
-                    @if (item.issuedAt) {
-                    <span class="calendar-details-meta-item">
-                      <span class="calendar-details-meta-label">Added</span>
-                      {{item.issuedAt|date:'medium'}}
-                    </span>
-                    }
                   </article>
                   }
                 </div>
@@ -391,86 +685,299 @@
             </div>
             } @else if (detailsKind === 'order' && detailsData) {
             <div class="calendar-details-order">
-              <div class="calendar-details-order-summary">
-                <span class="calendar-details-badge"
-                  [class.calendar-details-badge-success]="detailsData.status === 'success'"
-                  [class.calendar-details-badge-pending]="detailsData.status === 'pending'">
-                  {{ detailsData.status}}
-                </span>
-                <span class="calendar-details-order-meta">
-                  Order date: {{detailsData.orderDate|date:'mediumDate'}}
-                </span>
-                <span class="calendar-details-order-amount">
-                  {{detailsData.amountToPay|currency:'INR'}}
-                </span>
-              </div>
-              @if (detailsData.userId) {
-              <div class="calendar-details-customer">
-                <span class="calendar-details-meta-label">Customer</span>
-                <span class="calendar-details-customer-name">
-                  {{detailsData.userId?.fullname}}
-                </span>
-                <div class="calendar-details-guest-full">
-                  @if (detailsData.userId.email) {
-                  <span class="calendar-details-detail-row">
-                    <span class="calendar-details-meta-label">Email</span>
-                    <a [href]="'mailto:' + detailsData.userId.email">
-                      {{detailsData.userId.email}}
-                    </a>
-                  </span>
-                  }
-                  @if (detailsData.userId.mobile) {
-                  <span class="calendar-details-detail-row">
-                    <span class="calendar-details-meta-label">Phone</span>
-                    <a [href]="'tel:' + detailsData.userId.mobile">
-                      {{detailsData.userId.mobile}}
-                    </a>
-                  </span>
-                  }
+              <div class="calendar-details-order-overview">
+                <div class="calendar-details-order-panel">
+                  <div class="calendar-details-breakdown-row">
+                    <span class="calendar-details-breakdown-label">
+                      status
+                    </span>
+                    <span class="calendar-details-badge {{'calendar-details-badge-' + detailsData.status}}">
+                      {{ detailsData.status}}
+                    </span>
+                  </div>
+                  <div class="calendar-details-breakdown-row">
+                    <span class="calendar-details-breakdown-label">
+                      Order date
+                    </span>
+                    <span>
+                      {{detailsData.orderDate|date:'mediumDate'}}
+                    </span>
+                  </div>
+                  <!-- <div class="calendar-details-breakdown-row">
+                    <span class="calendar-details-breakdown-label">
+                      Credits Used
+                    </span>
+                    <span>{{ formatCredits(detailsData?.creditsUsed) }}</span>
+                  </div> -->
                 </div>
+
+                @if (detailsData.userId; as customer) {
+                <div class="calendar-details-order-panel">
+                  <div class="calendar-details-customer-header">
+                    <span class="calendar-details-customer-avatar" aria-hidden="true">
+                      {{ (customer.fullname || '?').charAt(0).toUpperCase() }}
+                    </span>
+                    <div class="calendar-details-customer-identity">
+                      <span class="calendar-details-meta-label">
+                        Customer
+                      </span>
+                      <span class="calendar-details-customer-name text-capitalize">
+                        {{ customer.fullname }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="calendar-details-customer-contact">
+                    @if (customer.email) {
+                    <a class="calendar-details-contact-item" [href]="'mailto:' + customer.email">
+                      <span class="calendar-details-contact-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                          viewBox="0 0 16 16">
+                          <path
+                            d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414.05 3.555ZM0 4.697v7.104l5.803-3.558L0 4.697ZM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586l-1.239-.757Zm13.86-.248A2 2 0 0 0 14 4H2a2 2 0 0 0-1.808 1.144l8.844 5.417 8.844-5.417Z" />
+                        </svg>
+                      </span>
+                      <span class="calendar-details-contact-text">
+                        <span class="calendar-details-meta-label">
+                          Email
+                        </span>
+                        <span class="calendar-details-contact-value">
+                          {{ customer.email }}
+                        </span>
+                      </span>
+                    </a>
+                    }
+                    @if (customer.mobile) {
+                    <a class="calendar-details-contact-item" [href]="'tel:' + customer.mobile">
+                      <span class="calendar-details-contact-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                          viewBox="0 0 16 16">
+                          <path fill-rule="evenodd"
+                            d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.49l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z" />
+                        </svg>
+                      </span>
+                      <span class="calendar-details-contact-text">
+                        <span class="calendar-details-meta-label">
+                          Phone
+                        </span>
+                        <span class="calendar-details-contact-value">
+                          {{ customer.mobile }}
+                        </span>
+                      </span>
+                    </a>
+                    }
+                  </div>
+                </div>
+                }
               </div>
-              }
+
               <section class="calendar-details-section">
                 <h3 class="calendar-details-section-title">
                   Line items
+                  <span class="badge bg-secondary rounded-pill px-2 py-1">
+                    {{ detailsData.lineItems.length }}
+                  </span>
                 </h3>
                 <div class="calendar-details-cards">
-                  @for (item of detailsData.lineItems; track $index) {
+                  @for (item of detailsData.lineItems; track item._id ?? $index) {
                   <article class="calendar-details-card calendar-details-card-line">
                     <div class="calendar-details-card-head">
-                      <span class="text-capitalize">
-                        {{item.assetId?.title ?? 'Asset'}}
+                      <span class="text-capitalize calendar-details-line-asset">
+                        {{ item.asset?.title ?? item.assetId?.title ?? 'Asset' }}
                       </span>
-                      <span class="calendar-details-line-amount">
-                        {{item.amountToPay|currency:'INR'}}
+                      <span class="calendar-details-line-price">
+                        <span class="calendar-details-line-amount">
+                          {{ formatCredits(item?.credit?.used) }}
+                        </span>
                       </span>
                     </div>
-                    <span class="calendar-details-guest-dates">
-                      {{item.startDate|date:'shortDate'}} – {{item.endDate|date:'shortDate'}} · {{item.units}} unit(s)
-                    </span>
-                    @if (item.guestDetails) {
-                    <div class="calendar-details-guest-full">
-                      <span class="calendar-details-guest-name">
-                        {{item.guestDetails.guestName}}
+
+                    <div class="calendar-details-card-meta calendar-details-line-meta">
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Check-in
+                        </span>
+                        <span>
+                          {{item.startDate|date:'mediumDate'}}
+                        </span>
                       </span>
-                      @if (item.guestDetails.email) {
-                      <span class="calendar-details-detail-row">
-                        <span class="calendar-details-meta-label">Email</span>
-                        <a [href]="'mailto:' + item.guestDetails.email">{{ item.guestDetails.email }}</a>
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Check-out
+                        </span>
+                        <span>
+                          {{item.endDate|date:'mediumDate'}}
+                        </span>
+                      </span>
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Units
+                        </span>
+                        <span>
+                          {{item.units}}
+                        </span>
+                      </span>
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Guests
+                        </span>
+                        <span>
+                          {{item.adults ?? 0}} adult{{ (item.adults ?? 0) === 1 ? '' : 's' }}
+                          @if (formatLineKids(item.kids); as kidsLabel) {
+                          <span class="calendar-details-line-kids"> · {{ kidsLabel }}</span>
+                          }
+                        </span>
+                      </span>
+                      @if (item.mealPlan) {
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Meal plan
+                        </span>
+                        <span class="text-capitalize">
+                          {{ item.mealPlan }}
+                        </span>
                       </span>
                       }
-                      @if (item.guestDetails.phone) {
-                      <span class="calendar-details-detail-row">
-                        <span class="calendar-details-meta-label">Phone</span>
-                        <a [href]="'tel:' + item.guestDetails.phone">{{ item.guestDetails.phone }}</a>
+                      <span class="calendar-details-meta-item">
+                        <span class="calendar-details-meta-label">
+                          Status
+                        </span>
+                        <span
+                          class="calendar-details-badge {{'calendar-details-badge-'+(item.isCancelled ? 'cancelled' : 'success')}}">
+                          {{ item.isCancelled ? 'Cancelled' : 'Confirmed' }}
+                        </span>
                       </span>
-                      }
-                      @if (item.guestDetails.address) {
-                      <span class="calendar-details-detail-row">
-                        <span class="calendar-details-meta-label">Address</span>
-                        {{ item.guestDetails.address }}
-                      </span>
-                      }
+                    </div>
+
+                    @if ((item?.memberId ?? item?.guestDetails); as guest) {
+                    <div class="calendar-details-line-guest">
+                      <div class="calendar-details-line-guest-identity">
+                        <span class="calendar-details-line-guest-avatar" aria-hidden="true">
+                          {{ (guest?.fullname || guest?.guestName || '?').charAt(0).toUpperCase() }}
+                        </span>
+                        <div class="calendar-details-line-guest-identity-text">
+                          <span class="calendar-details-meta-label">
+                            {{guestTypeLabel(guest)}}
+                          </span>
+                          <span class="calendar-details-line-guest-name text-capitalize">
+                            {{ guest?.fullname ?? guest?.guestName }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="calendar-details-line-guest-chips">
+                        @if (guest?.email) {
+                        <a class="calendar-details-line-guest-chip" href="mailto:{{guest?.email}}">
+                          <span class="calendar-details-line-guest-chip-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
+                              viewBox="0 0 16 16">
+                              <path
+                                d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414.05 3.555ZM0 4.697v7.104l5.803-3.558L0 4.697ZM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586l-1.239-.757Zm13.86-.248A2 2 0 0 0 14 4H2a2 2 0 0 0-1.808 1.144l8.844 5.417 8.844-5.417Z" />
+                            </svg>
+                          </span>
+                          <span class="calendar-details-line-guest-chip-text">
+                            <span class="calendar-details-line-guest-chip-label">
+                              Email
+                            </span>
+                            <span class="calendar-details-line-guest-chip-value">
+                              {{ guest.email }}
+                            </span>
+                          </span>
+                        </a>
+                        }
+                        @if ((guest?.mobile || guest?.phone); as contactNumber) {
+                        <a class="calendar-details-line-guest-chip" href="tel:{{contactNumber}}">
+                          <span class="calendar-details-line-guest-chip-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
+                              viewBox="0 0 16 16">
+                              <path fill-rule="evenodd"
+                                d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.49l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z" />
+                            </svg>
+                          </span>
+                          <span class="calendar-details-line-guest-chip-text">
+                            <span class="calendar-details-line-guest-chip-label">
+                              Phone
+                            </span>
+                            <span class="calendar-details-line-guest-chip-value">
+                              {{ contactNumber }}
+                            </span>
+                          </span>
+                        </a>
+                        }
+                        @if (guest?.emergencyContact) {
+                        <a class="calendar-details-line-guest-chip" href="tel:{{guest.emergencyContact}}">
+                          <span class="calendar-details-line-guest-chip-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
+                              viewBox="0 0 16 16">
+                              <path fill-rule="evenodd"
+                                d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.49l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z" />
+                            </svg>
+                          </span>
+                          <span class="calendar-details-line-guest-chip-text">
+                            <span class="calendar-details-line-guest-chip-label">
+                              Emergency
+                            </span>
+                            <span class="calendar-details-line-guest-chip-value">
+                              {{ guest.emergencyContact }}
+                            </span>
+                          </span>
+                        </a>
+                        }
+                        @if (guest?.relation) {
+                        <span class="calendar-details-line-guest-chip">
+                          <span class="calendar-details-line-guest-chip-icon" aria-hidden="true">
+                            <svg height="14" width="14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                              <g>
+                                <path fill="currentColor"
+                                  d="M326.75,128.859c-4.914-9.385-10.558-17.846-16.12-23.851c6.891-10.373,10.928-22.798,10.928-36.211 C321.55,32.595,292.202,3.247,256,3.238c-36.202,0.009-65.55,29.357-65.55,65.558c0,13.394,4.037,25.838,10.928,36.211 c-5.571,6.005-11.206,14.466-16.12,23.851c-4.933,9.515-9.025,19.704-10.568,29.292c-0.508,3.187-0.748,6.3-0.748,9.312 c-0.037,10.023,2.855,19.075,7.916,26.373c7.602,11.02,19.343,17.976,32.304,22.317c13.006,4.324,27.528,6.125,41.836,6.134 c19.085-0.046,38.529-3.132,54.28-11.399c7.861-4.148,14.826-9.709,19.87-17.052c5.053-7.298,7.944-16.342,7.916-26.373 c0-3.022-0.24-6.125-0.758-9.312C335.775,148.562,331.683,138.374,326.75,128.859z M222.394,35.191 c8.628-8.628,20.452-13.93,33.606-13.93c13.154,0,24.988,5.303,33.615,13.93c8.61,8.628,13.931,20.461,13.931,33.606 c-0.01,13.154-5.312,24.969-13.931,33.606c-8.628,8.609-20.461,13.92-33.615,13.92c-13.154-0.008-24.978-5.311-33.606-13.92 c-8.62-8.628-13.931-20.452-13.931-33.606C208.464,55.652,213.775,43.819,222.394,35.191z M315.296,183.656 c-4.481,6.568-12.545,11.88-23.159,15.408c-10.558,3.529-23.352,5.21-36.137,5.191c-17.034,0.046-34.105-3.03-45.864-9.311 c-5.894-3.104-10.411-6.91-13.423-11.308c-3.002-4.416-4.73-9.459-4.757-16.174c0-2.004,0.166-4.185,0.527-6.513 c0.988-6.439,4.416-15.501,8.748-23.759c3.87-7.464,8.498-14.318,12.221-18.595c11.454,9.8,26.298,15.75,42.548,15.75 c16.258,0,31.103-5.949,42.557-15.741c3.714,4.268,8.35,11.122,12.221,18.586c4.332,8.258,7.76,17.32,8.738,23.759 c0.37,2.328,0.536,4.489,0.536,6.513C320.026,174.178,318.298,179.222,315.296,183.656z">
+                                </path>
+                                <path fill="currentColor"
+                                  d="M152.817,400.055c-4.923-9.386-10.558-17.848-16.138-23.852c6.91-10.364,10.947-22.817,10.947-36.22 c-0.01-36.212-29.357-65.55-65.559-65.559c-36.202,0.01-65.54,29.348-65.55,65.559c0,13.394,4.037,25.837,10.938,36.22 c-5.561,5.986-11.224,14.447-16.138,23.852c-4.933,9.514-9.016,19.694-10.568,29.283C0.25,432.533,0,435.638,0,438.649 c-0.027,10.014,2.855,19.085,7.917,26.383c7.603,11.011,19.352,17.976,32.304,22.318c13.016,4.332,27.527,6.115,41.846,6.133 c19.085-0.037,38.538-3.132,54.289-11.399c7.842-4.156,14.825-9.718,19.851-17.043c5.053-7.307,7.953-16.36,7.926-26.373 c0-3.03-0.25-6.134-0.758-9.33C161.832,419.749,157.74,409.569,152.817,400.055z M48.461,306.368 c8.637-8.61,20.461-13.912,33.606-13.931c13.154,0.019,24.978,5.321,33.606,13.931c8.629,8.628,13.921,20.452,13.93,33.615 c-0.009,13.144-5.302,24.969-13.93,33.615c-8.628,8.609-20.452,13.912-33.606,13.912c-13.145,0-24.978-5.303-33.616-13.912 c-8.61-8.646-13.912-20.471-13.912-33.615C34.54,326.82,39.842,314.996,48.461,306.368z M141.363,454.842 c-4.481,6.586-12.554,11.889-23.159,15.418c-10.549,3.529-23.362,5.21-36.137,5.21c-17.034,0.037-34.114-3.049-45.864-9.32 c-5.902-3.123-10.411-6.92-13.431-11.326c-3.002-4.416-4.73-9.469-4.748-16.175c0-2.014,0.166-4.185,0.536-6.503 c0.98-6.448,4.398-15.5,8.739-23.759c3.87-7.473,8.508-14.318,12.23-18.604c11.446,9.81,26.29,15.759,42.539,15.759 c16.249,0,31.084-5.949,42.539-15.74c3.722,4.258,8.36,11.113,12.23,18.586c4.342,8.259,7.76,17.311,8.739,23.759 c0.369,2.31,0.536,4.489,0.536,6.522C146.083,445.374,144.356,450.426,141.363,454.842z">
+                                </path>
+                                <path fill="currentColor"
+                                  d="M511.252,429.338c-1.552-9.589-5.635-19.769-10.568-29.283c-4.914-9.404-10.577-17.866-16.138-23.852 c6.901-10.384,10.938-22.826,10.938-36.22c-0.01-36.212-29.348-65.55-65.55-65.559c-36.202,0.01-65.55,29.348-65.559,65.559 c0,13.394,4.037,25.837,10.938,36.22c-5.561,5.986-11.215,14.466-16.138,23.86c-4.914,9.506-9.006,19.686-10.558,29.274 c-0.498,3.195-0.748,6.3-0.748,9.33c-0.028,10.014,2.864,19.066,7.916,26.373c7.612,11.002,19.344,17.976,32.304,22.309 c13.015,4.332,27.537,6.115,41.846,6.133c19.085-0.037,38.539-3.132,54.289-11.399c7.851-4.156,14.826-9.718,19.86-17.052 c5.044-7.298,7.944-16.35,7.917-26.383C512,435.638,511.741,432.533,511.252,429.338z M396.328,306.368 c8.628-8.61,20.452-13.912,33.606-13.921c13.144,0.01,24.968,5.312,33.606,13.921c8.619,8.628,13.921,20.452,13.921,33.615 c0,13.144-5.302,24.969-13.921,33.615c-8.628,8.609-20.461,13.912-33.606,13.912c-13.154,0-24.978-5.303-33.606-13.912 c-8.628-8.646-13.93-20.471-13.93-33.615C382.397,326.82,387.7,314.996,396.328,306.368z M489.23,454.842 c-4.481,6.586-12.545,11.889-23.159,15.418c-10.549,3.529-23.361,5.21-36.137,5.21c-17.044,0.037-34.123-3.049-45.864-9.312 c-5.894-3.122-10.42-6.928-13.432-11.316c-2.993-4.424-4.72-9.468-4.748-16.174c0-2.023,0.167-4.194,0.527-6.522 c0.988-6.448,4.406-15.5,8.748-23.759c3.861-7.473,8.498-14.318,12.222-18.604c11.454,9.81,26.298,15.759,42.548,15.759 c16.249,0,31.084-5.949,42.539-15.74c3.722,4.258,8.36,11.113,12.23,18.586c4.342,8.259,7.76,17.311,8.739,23.759 c0.369,2.318,0.536,4.489,0.536,6.503C493.95,445.374,492.231,450.418,489.23,454.842z">
+                                </path>
+                                <path fill="currentColor"
+                                  d="M102.629,211.008l-19.5-4.388c4.185-13.561,11.021-26.271,20.203-37.32 c4.766-5.745,10.179-11.047,16.202-15.777c5.867-4.61,12.24-8.693,19.168-12.083l-7.953-16.175 c-8.102,3.981-15.556,8.749-22.346,14.088c-7.03,5.534-13.357,11.731-18.937,18.428c-11.03,13.275-19.084,28.581-23.925,44.876 l-22.317-5.016l22.28,49.015L102.629,211.008z">
+                                </path>
+                                <path fill="currentColor"
+                                  d="M281.948,470.796c-7.991,1.838-16.202,2.789-24.442,2.789c-6.096,0-12.212-0.517-18.29-1.552 c-7.354-1.266-14.65-3.298-21.754-6.152c-6.919-2.752-13.644-6.254-20.064-10.549l-10.014,15.001 c7.501,5.007,15.344,9.072,23.38,12.277c8.295,3.326,16.822,5.709,25.412,7.178c7.085,1.219,14.226,1.81,21.33,1.81 c10.068,0,20.064-1.256,29.8-3.603l6.475,20.766l31.306-43.786l-49.42-14.336L281.948,470.796z">
+                                </path>
+                                <path fill="currentColor"
+                                  d="M406.322,166.53c10.106,10.623,18.096,23.241,23.241,37.18c2.596,6.993,4.481,14.346,5.561,21.921 c0.74,5.108,1.118,10.3,1.118,15.575c0,2.337-0.074,4.692-0.231,7.075l17.985,1.164c0.176-2.762,0.269-5.506,0.269-8.24 c0-6.152-0.453-12.212-1.294-18.143c-1.274-8.849-3.472-17.432-6.503-25.597c-6.142-16.646-15.759-31.62-27.924-44.183 l15.325-16.619l-53.577-5.201l12.295,49.957L406.322,166.53z">
+                                </path>
+                              </g>
+                            </svg>
+                          </span>
+                          <span class="calendar-details-line-guest-chip-text">
+                            <span class="calendar-details-line-guest-chip-label">
+                              Relation
+                            </span>
+                            <span class="calendar-details-line-guest-chip-value text-capitalize">
+                              {{ guest.relation }}
+                            </span>
+                          </span>
+                        </span>
+                        }
+                        @if (guest?.address) {
+                        <span class="calendar-details-line-guest-chip calendar-details-line-guest-chip-static">
+                          <span class="calendar-details-line-guest-chip-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
+                              viewBox="0 0 16 16">
+                              <path
+                                d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
+                            </svg>
+                          </span>
+                          <span class="calendar-details-line-guest-chip-text">
+                            <span class="calendar-details-line-guest-chip-label">
+                              Address
+                            </span>
+                            <span class="calendar-details-line-guest-chip-value">
+                              {{ guest.address }}
+                            </span>
+                          </span>
+                        </span>
+                        }
+                      </div>
                     </div>
                     }
                   </article>
@@ -488,6 +995,21 @@
         </div>
       </div>
     </div>
+    }
+  </app-modal-layer>
+
+  <!-- Upsert blackout date Modal -->
+  <app-modal-layer [appRegisterModalLayer]="upsertBlackoutModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(upsertBlackoutModalId)) {
+    <app-upsert-blackout-date [selectedAsset]="selectedAsset" [assetList]="assetList" [data]="upsertBlackout"
+      (upsert)="blackoutUpsertEvent($event)" />
+    }
+  </app-modal-layer>
+
+  <!-- Delete Modal -->
+  <app-modal-layer [appRegisterModalLayer]="deleteBlackoutModalId" bgLayer="bg-gray-light">
+    @if (_coreService.modal.isOpen(deleteBlackoutModalId)) {
+    <app-remove-blackout-date [data]="blackoutDeleteData" (close)="blackoutDeleteCloseEvent($event)" />
     }
   </app-modal-layer>
 </div>
