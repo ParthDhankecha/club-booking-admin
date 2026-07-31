@@ -1,1 +1,0 @@
-import{Qa as p,ea as n,ya as o,za as a}from"./chunk-P7X7TUSK.js";var i=class t{ngOnInit(){}static \u0275fac=function(e){return new(e||t)};static \u0275cmp=n({type:t,selectors:[["app-page-not-found"]],decls:2,vars:0,template:function(e,d){e&1&&(o(0,"p"),p(1,"Page not found!"),a())},encapsulation:2})};export{i as a};
